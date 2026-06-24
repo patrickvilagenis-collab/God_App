@@ -391,6 +391,21 @@ async function renderLibrary(){
 
 /* --- buscador --- */
 const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+// Las consultas largas (frases pegadas) fallan como coincidencia exacta porque el texto
+// fuente tiene dobles espacios tras la puntuación. Reducimos a una frase distintiva
+// y sin puntuación (5 palabras seguidas), o a la palabra significativa más larga.
+function reduceQuery(q){
+  q=(q||"").replace(/\s+/g," ").trim();
+  const words=q.split(" ");
+  if(words.length<=6) return q;
+  const isClean=w=>/^[\p{L}]+$/u.test(w);
+  for(let i=0;i+5<=words.length;i++){
+    const win=words.slice(i,i+5);
+    if(win.every(isClean) && win.join("").length>=14) return win.join(" ");
+  }
+  const longest=words.filter(isClean).sort((a,b)=>b.length-a.length)[0];
+  return longest||q;
+}
 function snippetHTML(text, query){
   let x=clean(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const terms=(query||"").trim().split(/\s+/).filter(t=>t.length>2).map(escapeRegex);
@@ -470,20 +485,28 @@ function searchBar(sourceKey, fromLevel){
 async function libSearch(body,L){
   body.innerHTML="";
   body.appendChild(searchBar(libState.searchSource, libState.searchFrom||"books"));
+  const shown=libState.query.length>56 ? libState.query.slice(0,56).trim()+"…" : libState.query;
   const head=el("div","section-h");
-  head.textContent=(S.lang==="es"?"Resultados: «":"Results: “")+libState.query+(S.lang==="es"?"»":"”");
+  head.textContent=(S.lang==="es"?"Resultados: «":"Results: “")+shown+(S.lang==="es"?"»":"”");
   body.appendChild(head);
   const status=el("div","loading"); status.textContent=L.loading; body.appendChild(status);
-  let results=[];
-  try{ results=await runSearch(libState.searchSource, libState.query); }
-  catch(e){ status.textContent=L.err; console.error(e); return; }
+
+  let eq=reduceQuery(libState.query), results=[];
+  try{
+    results=await runSearch(libState.searchSource, eq);
+    if(!results.length && eq.includes(" ")){            // respaldo: palabra más significativa
+      const longest=eq.split(" ").sort((a,b)=>b.length-a.length)[0];
+      if(longest && longest.length>3){ eq=longest; results=await runSearch(libState.searchSource, eq); }
+    }
+  }catch(e){ status.textContent=L.err; console.error(e); return; }
   status.remove();
+
   if(!results.length){ const e2=el("div","empty"); e2.textContent=(S.lang==="es"?"Sin resultados.":"No results."); body.appendChild(e2); return; }
   const list=el("div","lib-list");
   results.forEach(r=>{
     const b=el("button","sresult"); b.innerHTML=`<b></b><span></span>`;
     b.querySelector("b").textContent=r.ref;
-    b.querySelector("span").innerHTML=snippetHTML(r.snippet, libState.query);
+    b.querySelector("span").innerHTML=snippetHTML(r.snippet, eq);
     if(r.open) b.onclick=r.open; else b.disabled=true;
     list.appendChild(b);
   });
