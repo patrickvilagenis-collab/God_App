@@ -104,3 +104,24 @@ acento (no como protagonista), y cómo el espacio en blanco transmite calidad.
 apagado; serif editorial (*Cormorant Garamond*) para títulos + *Inter* para texto;
 iconos de línea; cero emojis ni estrellas; aire generoso. Resultado: serio, cálido,
 con autoridad y confianza. (Existe variante en modo oscuro premium si se prefiere.)
+
+---
+
+## 6. Biblioteca — fuentes de los textos sagrados
+
+La biblioteca (Inicio → Biblioteca) ofrece lectura navegable (texto → libro → capítulo).
+
+| Tradición | Texto | Fuente | Idiomas |
+|---|---|---|---|
+| Cristianismo | Biblia (66 libros) | bolls.life | ES (Reina-Valera 1960), EN (World English Bible) |
+| Islam | Corán (114 suras) | alquran.cloud | ES (Isa García), EN (Sahih International) |
+| Judaísmo | Torá + Salmos | Sefaria | Hebreo + inglés (ES no disponible en la fuente) |
+| Budismo | Dhammapada (26 cap.) | Empaquetado (Gutenberg) | EN (Müller, dominio público) |
+
+**Nota de licencias (importante para producción):** WEB, World English Bible, la
+traducción de Müller del Dhammapada y los textos de Sefaria son de dominio público o
+abiertos. **Reina-Valera 1960** está bajo copyright (Sociedades Bíblicas); su uso vía
+API de terceros es aceptable para un prototipo, pero la versión final debe **licenciar
+formalmente** las traducciones con copyright o usar alternativas de dominio público
+(p. ej. Reina-Valera 1909) y traducciones del Corán/Dhammapada con licencia clara en
+ambos idiomas.
