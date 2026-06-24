@@ -42,17 +42,30 @@ minors, and biometric voice data, safety is not a feature — it is a license to
 - **Interfaith respect:** never disparage other traditions.
 - **Accurate sourcing:** no invented scripture (enforced by RAG + citation verification).
 
-## 4. Minors
+## 4. Minors — **13+ confirmed → minor safety is MVP scope**
 
-- **Decide the age policy explicitly** (open decision). Options: 18+ only; 13+ with
-  protections; or under-13 with verifiable parental consent (COPPA). The audience skews
-  young, so this is consequential.
-- If minors are allowed: age-appropriate design code compliance, stronger default
-  privacy, heightened crisis safeguards, parental-consent flows where required, and
-  extra caution on community and voice features (likely **disable** cloned voice and
-  user-to-user community for minors).
-- Recommendation: **launch 18+** (or 16+/13+ only with a dedicated youth-safety review),
-  to ship MVP without the full minor-safety apparatus, then expand deliberately.
+Because the launch age is **13+**, minors are first-class users and their protection is
+an **MVP requirement**, not a later phase. This is the single largest scope addition from
+the confirmed decisions. Required for launch:
+
+- **Age gating** at signup and an under-13 block (under-13 not permitted without the full
+  verifiable-parental-consent build, which is out of MVP scope).
+- **COPPA-adjacent / age-appropriate-design compliance** (US COPPA applies under 13 and
+  informs 13+ design; UK AADC / "Children's Code" and similar EU rules set the bar for
+  13–17). Treat 13–17 users with heightened protection by default.
+- **Parental-consent / notice flows** where a jurisdiction requires them for minors.
+- **Stronger default privacy for minors:** maximum privacy on by default, minimal data
+  collection, no behavioral profiling, no nudges toward sharing.
+- **Heightened crisis safeguards** for minors (youth-appropriate resources; this audience
+  is higher-risk for self-harm — invest here).
+- **Feature restrictions for minors:** **cloned voice disabled** for under-18; **user-to-
+  user community (P2/P3) gated or disabled** for minors with strict no-unsupervised-adult-
+  contact rules; no public testimonies from minors.
+- **Youth-safety review** of the companion's tone and crisis flows specifically for a
+  teen audience, as part of the advisory board's pre-launch sign-off.
+
+Trade-off accepted: this materially increases MVP scope versus an 18+ launch, but matches
+the core mission of reaching young, spiritually searching people.
 
 ## 5. Voice / biometric consent (P2)
 

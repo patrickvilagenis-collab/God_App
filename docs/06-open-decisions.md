@@ -4,6 +4,18 @@ The strategic calls that are genuinely yours to make. Each has my recommendation
 trade-off, so you can confirm or redirect. Resolving these unlocks detailed design and a
 build plan.
 
+## ✅ Confirmed (2026-06-24)
+
+| # | Decision | Choice | Key implication |
+|---|----------|--------|-----------------|
+| 1 | **Launch traditions** | Christianity, Islam, Judaism, **and** Buddhism | Ambitious — each needs licensed scripture (EN+ES) + per-tradition expert review before it ships. This is the **long pole of MVP**; may stage within MVP (Christianity + Islam first, Judaism + Buddhism close behind) rather than block launch on all four. |
+| 2 | **Minimum age** | **13+** | **Largest scope change.** Pulls the full minor-safety apparatus into MVP: COPPA / age-appropriate-design compliance, age gating, parental-consent flows where required, stronger default privacy, heightened crisis safeguards, and **minors excluded from cloned-voice and (later) user-to-user community**. See safety doc §4. |
+| 3 | **Business model** | Free core + donations + optional supporter tier | Mission-aligned, grant-eligible. Pursue nonprofit/PBC structure; never ads or data sale. |
+| 4 | **Community scope/timing** | Phased | 1-on-1 only at MVP → directory + curated testimonies (P2) → moderated groups/mentors (P3). For 13+, community features carry extra minor-safeguarding requirements. |
+
+Remaining decisions below are still open (human element, cloned-voice timing, journal
+privacy model, platform-first) — recommendations stand unless you say otherwise.
+
 | # | Decision | Recommendation | Why / trade-off |
 |---|----------|----------------|-----------------|
 | 1 | **Launch traditions** | Christianity + Islam, deep & excellent (add Judaism/Buddhism/etc. in P2) | "Deep on a few" earns trust; "shallow on ten" risks doctrinal errors. Pairs well with EN/ES audience. *Confirm which traditions.* |

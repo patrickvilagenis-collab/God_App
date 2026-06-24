@@ -62,10 +62,13 @@ prompt, the content guidelines, and the UX.
 Design for **Sofia first**. If the app earns the trust of a guarded, skeptical young
 seeker, it will serve the others well.
 
-## 5. Scope decisions (recommendations)
+## 5. Scope decisions
 
-These are the high-leverage strategic choices. Each has a recommendation and a
-rationale; final calls are flagged in `docs/06-open-decisions.md`.
+These are the high-leverage strategic choices. Several are now **confirmed** (see
+`docs/06-open-decisions.md` for the decision log): launch traditions = Christianity,
+Islam, Judaism, Buddhism; **minimum age = 13+** (minor safety is therefore MVP scope);
+business model = free core + donations + supporter tier; community = phased. Rationale
+and the still-open calls follow.
 
 ### 5.1 Community: yes, but *phased and curated* — not a social network at launch
 - **MVP = 1-on-1 only.** The trust and safety bar for user-to-user interaction is high,

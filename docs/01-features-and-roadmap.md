@@ -31,9 +31,13 @@ humans), is deferred.
   Christianity), optionally refine (Catholic / Protestant / Orthodox →
   Baptist / Methodist…), and choose how strictly to apply it.
 - Adjustable anytime from settings; changing it re-tailors resources, tone, and library.
-- **MVP scope decision:** ship **2–3 traditions deep and excellent** (recommend
-  Christianity + Islam, given the bilingual EN/ES focus and likely audience) rather than
-  10 traditions shallow. Add traditions as P2/P3 with proper sourcing per tradition.
+- **MVP scope decision (confirmed):** launch **four traditions deep — Christianity,
+  Islam, Judaism, Buddhism** — rather than many shallow. This is ambitious: each needs
+  licensed scripture (EN+ES) and per-tradition expert review before it ships, making it
+  the **long pole of MVP**. Recommended sequencing if needed: Christianity + Islam first,
+  Judaism + Buddhism following closely, rather than blocking launch on all four at once.
+  Note Buddhism is less citation-of-scripture-driven and needs a slightly different
+  grounding approach (teachings/suttas/practices over verse-citation).
 - "Exploring / Not sure" is a first-class option that routes to intro-to-faith content.
 
 ### 3. Communication & expression tools (multi-format) — **phased**
@@ -124,3 +128,6 @@ partnerships/integrations · Additional languages.
 - Crisis safety handling and the "not a therapist/doctor" boundary.
 - Per-user privacy, encryption, and data self-service (export/delete).
 - Doctrinal grounding (no invented scripture) for any tradition we claim to support.
+- **Minor safety (13+ launch):** age gating, age-appropriate-design/COPPA compliance,
+  stronger default privacy for minors, and youth-appropriate crisis safeguards — see
+  safety doc §4.
