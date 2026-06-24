@@ -381,11 +381,113 @@ async function renderLibrary(){
   const L=LBL(), body=$("library-body"), st=libState;
   $("lib-sub").textContent=L.sub;
   $("lib-back").classList.toggle("hidden", st.level==="texts");
-  $("lib-title").textContent = st.level==="texts" ? (S.lang==="es"?"Biblioteca":"Library") : srcName(st.source);
+  $("lib-title").textContent = st.level==="texts" ? (S.lang==="es"?"Biblioteca":"Library") : srcName(st.source||st.searchSource);
   if(st.level==="texts") return libTexts(body,L);
   if(st.level==="books") return libBooks(body,L);
   if(st.level==="chapters") return libChapters(body,L);
+  if(st.level==="search") return libSearch(body,L);
   if(st.level==="reader") return libReader(body,L);
+}
+
+/* --- buscador --- */
+const escapeRegex = s => s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function snippetHTML(text, query){
+  let x=clean(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const terms=(query||"").trim().split(/\s+/).filter(t=>t.length>2).map(escapeRegex);
+  if(terms.length){ try{ x=x.replace(new RegExp("("+terms.join("|")+")","gi"),"<mark>$1</mark>"); }catch(e){} }
+  return x;
+}
+async function loadJSONpost(url,bodyObj){
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(bodyObj)});
+  if(!r.ok) throw new Error(r.status); return r.json();
+}
+function openReader(source, book, chapter, fromSearch){
+  libState={...libState, level:"reader", source, book, chapter, from:fromSearch?"search":null};
+  renderLibrary();
+}
+function parseRef(q, sourceKey){
+  if(sourceKey!=="bible" && sourceKey!=="torah") return null;
+  const m=q.trim().match(/^(.+?)\s+(\d{1,3})(?::\d+)?$/); if(!m) return null;
+  const name=m[1].toLowerCase().trim(), ch=+m[2];
+  const books = sourceKey==="bible" ? libCache.bibleBooks : TORAH_BOOKS.map(t=>({en:t[0],es:t[1],ch:t[2]}));
+  if(!books) return null;
+  const bk=books.find(b=> b.en.toLowerCase()===name||b.es.toLowerCase()===name)
+        || books.find(b=> b.en.toLowerCase().startsWith(name)||b.es.toLowerCase().startsWith(name));
+  return (bk && ch>=1 && ch<=bk.ch) ? {book:bk,chapter:ch} : null;
+}
+async function runSearch(key, q){
+  q=q.trim(); if(!q) return [];
+  if(key==="bible"){
+    await loadBibleBooks();
+    const tr=S.lang==="es"?"RV1960":"WEB";
+    const arr=await loadJSON(`https://bolls.life/find/${tr}/${encodeURIComponent(q)}/`);
+    return arr.slice(0,80).map(r=>{ const bk=libCache.bibleBooks.find(b=>b.id===r.book)||{};
+      return {ref:`${S.lang==="es"?bk.es:bk.en} ${r.chapter}:${r.verse}`, snippet:r.text,
+              open:()=>openReader("bible",bk,r.chapter,true)}; });
+  }
+  if(key==="quran"){
+    const ed=S.lang==="es"?"es.garcia":"en.sahih";
+    const d=await loadJSON(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q)}/all/${ed}`);
+    const m=(d.data&&d.data.matches)||[];
+    return m.slice(0,80).map(a=>({ref:`${a.surah.englishName} ${a.surah.number}:${a.numberInSurah}`, snippet:a.text,
+              open:()=>openReader("quran",null,a.surah.number,true)}));
+  }
+  if(key==="dhammapada"){
+    const d=await loadDhammapada(), out=[], ql=q.toLowerCase();
+    d.chapters.forEach((c,i)=> c.verses.forEach(v=>{ if(v.t.toLowerCase().includes(ql))
+      out.push({ref:`${i+1}. ${c.title} · ${v.v}`, snippet:v.t, open:()=>openReader("dhammapada",null,i,true)}); }));
+    return out.slice(0,80);
+  }
+  if(key==="torah"){
+    const d=await loadJSONpost("https://www.sefaria.org/api/search-wrapper",
+      {query:q,type:"text",field:"naive_lemmatizer",size:50,filters:["Tanakh/Torah","Tanakh/Writings/Psalms"]});
+    const hits=(d.hits&&d.hits.hits)||[], books=TORAH_BOOKS.map(t=>({en:t[0],es:t[1],ch:t[2]}));
+    return hits.map(h=>{
+      const idref=(h._id||"").split(" (")[0], mm=idref.match(/^(.+) (\d+):(\d+)$/);
+      let open=null; if(mm){ const bk=books.find(b=>b.en===mm[1]); if(bk) open=()=>openReader("torah",bk,+mm[2],true); }
+      const hl=(h.highlight&&h.highlight.naive_lemmatizer&&h.highlight.naive_lemmatizer[0])||"";
+      return {ref:idref, snippet:hl, open};
+    }).filter(r=>r.snippet);
+  }
+  return [];
+}
+function searchBar(sourceKey, fromLevel){
+  const wrap=el("div","libsearch");
+  wrap.innerHTML=`<svg class="svg si"><use href="#ic-search"/></svg><input type="search"><button class="sclr">×</button>`;
+  const inp=wrap.querySelector("input");
+  inp.placeholder=(S.lang==="es"?"Buscar en ":"Search ")+srcName(sourceKey);
+  if(libState.level==="search") inp.value=libState.query||"";
+  const submit=async()=>{ const q=inp.value.trim(); if(!q) return;
+    if(sourceKey==="bible") { try{ await loadBibleBooks(); }catch(e){} }
+    const ref=parseRef(q,sourceKey);
+    if(ref){ openReader(sourceKey,ref.book,ref.chapter,false); return; }
+    libState={...libState, level:"search", query:q, searchSource:sourceKey, searchFrom:fromLevel}; renderLibrary();
+  };
+  inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); submit(); } });
+  wrap.querySelector(".sclr").onclick=()=>{ inp.value=""; inp.focus(); };
+  return wrap;
+}
+async function libSearch(body,L){
+  body.innerHTML="";
+  body.appendChild(searchBar(libState.searchSource, libState.searchFrom||"books"));
+  const head=el("div","section-h");
+  head.textContent=(S.lang==="es"?"Resultados: «":"Results: “")+libState.query+(S.lang==="es"?"»":"”");
+  body.appendChild(head);
+  const status=el("div","loading"); status.textContent=L.loading; body.appendChild(status);
+  let results=[];
+  try{ results=await runSearch(libState.searchSource, libState.query); }
+  catch(e){ status.textContent=L.err; console.error(e); return; }
+  status.remove();
+  if(!results.length){ const e2=el("div","empty"); e2.textContent=(S.lang==="es"?"Sin resultados.":"No results."); body.appendChild(e2); return; }
+  const list=el("div","lib-list");
+  results.forEach(r=>{
+    const b=el("button","sresult"); b.innerHTML=`<b></b><span></span>`;
+    b.querySelector("b").textContent=r.ref;
+    b.querySelector("span").innerHTML=snippetHTML(r.snippet, libState.query);
+    if(r.open) b.onclick=r.open; else b.disabled=true;
+    list.appendChild(b);
+  });
+  body.appendChild(list);
 }
 
 function libCard(key){
@@ -399,8 +501,9 @@ function libCard(key){
 }
 function libTexts(body,L){
   body.innerHTML="";
-  const intro=el("p","lib-intro"); intro.textContent=L.intro; body.appendChild(intro);
   const mine=TRAD_SOURCE[S.tradition];
+  body.appendChild(searchBar(mine||"bible","texts"));
+  const intro=el("p","lib-intro"); intro.textContent=L.intro; body.appendChild(intro);
   const keys=Object.keys(SOURCES);
   if(mine){
     body.appendChild(libCard(mine));
@@ -436,7 +539,7 @@ async function libBooks(body,L){
         S.lang==="es"?bk.es:bk.en, `${bk.ch} ${L.chapters}`,
         ()=>{ libState={level:"chapters",source:libState.source,book:bk,chapter:null}; renderLibrary(); })));
     }
-    body.innerHTML=""; body.appendChild(list);
+    body.innerHTML=""; body.appendChild(searchBar(libState.source,"books")); body.appendChild(list);
   }catch(e){ body.innerHTML=`<div class="loading">${L.err}</div>`; console.error(e); }
 }
 function libChapters(body,L){
@@ -508,7 +611,11 @@ function askAboutPassage(ref){
 }
 $("lib-back").onclick=()=>{
   const st=libState;
-  if(st.level==="reader") st.level=(st.source==="bible"||st.source==="torah")?"chapters":"books";
+  if(st.level==="reader"){
+    if(st.from==="search") st.level="search";
+    else st.level=(st.source==="bible"||st.source==="torah")?"chapters":"books";
+  }
+  else if(st.level==="search"){ st.level=st.searchFrom||"books"; if(st.level==="texts") st.source=null; }
   else if(st.level==="chapters") st.level="books";
   else if(st.level==="books"){ st.level="texts"; st.source=null; }
   renderLibrary();
