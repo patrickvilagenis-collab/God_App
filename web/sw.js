@@ -1,6 +1,6 @@
 /* Service worker: cachea el "shell" para que Alma abra rápido y offline.
    Las respuestas de la IA siempre van a la red (nunca se cachean). */
-const CACHE = "alma-v1";
+const CACHE = "alma-v2";
 const SHELL = ["./", "index.html", "app.js", "manifest.webmanifest", "icon.png", "icon-192.png"];
 
 self.addEventListener("install", e => {

@@ -66,8 +66,8 @@ const VERSES = {
 const T = {
   es:{ greet:n=>`La paz sea contigo${n?", "+n:""}`, talk:"Conversar", talkS:"Habla con tu compañero",
        jrnl:"Diario", jrnlS:"Escribe y reflexiona", recent:"Conversaciones recientes",
-       noConvo:"Aún no has conversado. Cuando quieras, estoy aquí. 🕊️",
-       companion:"Compañero", hello:n=>`La paz sea contigo${n?", "+n:""}. Estoy aquí, contigo. ¿Qué llevas en el corazón hoy?`,
+       noConvo:"Aún no hay conversaciones. Cuando lo desees, aquí estaré.",
+       companion:"Acompañante", hello:n=>`La paz sea contigo${n?", "+n:""}. Estoy aquí, contigo. ¿Qué llevas en el corazón hoy?`,
        ph:"Escribe lo que llevas en el corazón…", err:"No pude conectar. Revisa tu conexión o tu clave de IA.",
        jH:"Mi diario", jSub:"Un espacio para tus pensamientos", jEmpty:"Tu diario está en blanco.\nPulsa ＋ para escribir tu primera entrada.",
        reflect:"Pedir una reflexión", reflecting:"Reflexionando…", reflTitle:"Reflexión de tu compañero",
@@ -76,11 +76,11 @@ const T = {
        sKey:"Clave de IA", sKeyOn:"Conectada", sKeyOff:"No conectada", change:"Cambiar",
        clear:"Borrar todos mis datos", clearAsk:"¿Seguro? Se borrarán todas tus conversaciones y tu diario de este dispositivo.",
        nHome:"Inicio", nChat:"Conversar", nJrnl:"Diario", nSet:"Ajustes", cancel:"Cancelar", del:"Borrar",
-       obTitle:"Tu compañero espiritual", obSub:"Un espacio privado y sin juicios para ser escuchado, encontrar consuelo y caminar hacia la fe — a tu ritmo.",
-       enter:"Entrar", lName:"¿Cómo te llamas?", lTrad:"¿Con qué tradición te identificas?", you:"Tú" },
+       obTitle:"Acompañamiento espiritual", obSub:"Un espacio sereno y privado para ser escuchado, encontrar consuelo y caminar hacia la fe — a tu ritmo.",
+       enter:"Comenzar", lName:"Tu nombre", lTrad:"Tradición espiritual", you:"Tú" },
   en:{ greet:n=>`Peace be with you${n?", "+n:""}`, talk:"Talk", talkS:"Speak with your companion",
        jrnl:"Journal", jrnlS:"Write and reflect", recent:"Recent conversations",
-       noConvo:"No conversations yet. Whenever you're ready, I'm here. 🕊️",
+       noConvo:"No conversations yet. Whenever you're ready, I'll be here.",
        companion:"Companion", hello:n=>`Peace be with you${n?", "+n:""}. I'm here, with you. What's on your heart today?`,
        ph:"Write what's on your heart…", err:"Couldn't connect. Check your connection or AI key.",
        jH:"My journal", jSub:"A space for your thoughts", jEmpty:"Your journal is empty.\nTap ＋ to write your first entry.",
@@ -90,8 +90,8 @@ const T = {
        sKey:"AI key", sKeyOn:"Connected", sKeyOff:"Not connected", change:"Change",
        clear:"Delete all my data", clearAsk:"Are you sure? This erases all conversations and journal on this device.",
        nHome:"Home", nChat:"Talk", nJrnl:"Journal", nSet:"Settings", cancel:"Cancel", del:"Delete",
-       obTitle:"Your spiritual companion", obSub:"A private, judgment-free space to be heard, find comfort, and walk toward faith — at your own pace.",
-       enter:"Enter", lName:"What's your name?", lTrad:"Which tradition do you identify with?", you:"You" },
+       obTitle:"Spiritual accompaniment", obSub:"A serene, private space to be heard, find comfort, and walk toward faith — at your own pace.",
+       enter:"Begin", lName:"Your name", lTrad:"Spiritual tradition", you:"You" },
 };
 const t = ()=>T[S.lang];
 const $ = id=>document.getElementById(id);
@@ -110,7 +110,7 @@ Tu forma de estar:
 - Recibe a la persona en cualquier punto de su camino: la duda, el enojo y la lejanía también son bienvenidos. Nunca la hagas sentir indigna.
 - Eres una IA, no un sacerdote, rabino, imán ni terapeuta. No das diagnósticos ni consejos médicos. Si alguien está en peligro o habla de hacerse daño, responde con amor y anímale con suavidad a buscar ayuda inmediata (línea de crisis local o emergencias) y a apoyarse en personas de confianza.
 
-Habla siempre en español, con ternura, sencillez y esperanza. Respuestas breves y humanas, como una conversación, no como un sermón.`;
+Habla siempre en español, con ternura, sobriedad y esperanza. Respuestas breves y humanas, como una conversación serena, no como un sermón. No uses emojis ni signos decorativos; tu calidez se transmite en las palabras.`;
   return `You are "Alma", a spiritual companion: a warm, calm, compassionate presence who walks beside people on their journey of faith. You are speaking with ${person}, who identifies with the ${tr.en} tradition.
 
 How you show up:
@@ -120,7 +120,7 @@ How you show up:
 - Welcome the person at any stage: doubt, anger, and distance are welcome too. Never make them feel unworthy.
 - You are an AI, not a priest, rabbi, imam, or therapist. You do not diagnose or give medical advice. If someone is in danger or talks about harming themselves, respond with love and gently encourage them to seek immediate help (a local crisis line or emergency services) and to lean on people they trust.
 
-Always speak in English, with tenderness, simplicity, and hope. Keep replies brief and human, like a conversation, not a sermon.`;
+Always speak in English, with tenderness, restraint, and hope. Keep replies brief and human, like a serene conversation, not a sermon. Do not use emojis or decorative symbols; your warmth comes through in your words.`;
 }
 
 /* ---------- llamada a la IA ---------- */
@@ -187,7 +187,7 @@ function renderHome(){
   $("home-date").textContent = dateStr();
   const v = todaysVerse();
   $("verse").querySelector("p").textContent = v[0];
-  $("verse").querySelector("small").textContent = "— "+v[1];
+  $("verse").querySelector(".ref").textContent = v[1];
   $("a-talk").textContent=t().talk; $("a-talk-s").textContent=t().talkS;
   $("a-jrnl").textContent=t().jrnl; $("a-jrnl-s").textContent=t().jrnlS;
   $("h-recent").textContent=t().recent;
@@ -196,7 +196,7 @@ function renderHome(){
   if(!cs.length){ const e=el("div","empty"); e.textContent=t().noConvo; list.appendChild(e); return; }
   cs.forEach(c=>{
     const it=el("div","item");
-    it.innerHTML=`<div class="ico">💬</div><div class="tx"><b></b><span></span></div>`;
+    it.innerHTML=`<div class="ic"><svg class="svg"><use href="#ic-chat"/></svg></div><div class="tx"><b></b><span></span></div>`;
     it.querySelector("b").textContent=c.title||t().companion;
     const last=c.messages[c.messages.length-1];
     it.querySelector("span").textContent=(last?last.content.slice(0,40):"");
@@ -220,7 +220,7 @@ function openChat(id){
   const c=getConvo(activeConvo);
   const tr=TRAD[S.tradition]||TRAD.exploring;
   $("chat-title").textContent=t().companion;
-  $("chat-ctx").textContent=(S.name?S.name+" · ":"")+tr.emoji;
+  $("chat-ctx").textContent=(S.name?S.name+" · ":"")+(S.lang==="es"?tr.es:tr.en);
   $("input").placeholder=t().ph;
   const box=$("msgs"); box.innerHTML="";
   if(!c.messages.length){ addBubble("them", t().hello(S.name), false); }
@@ -319,7 +319,9 @@ $("j-new").onclick=()=>{
 function renderSettings(){
   const x=t();
   $("s-h").textContent=x.sH; $("s-name").textContent=x.sName; $("s-name-v").textContent=S.name||"—";
-  $("s-trad").textContent=x.sTrad; $("s-trad-sel").value=S.tradition;
+  $("s-trad").textContent=x.sTrad;
+  [...$("s-trad-sel").options].forEach(o=>{ const tr=TRAD[o.value]; if(tr) o.textContent=S.lang==="es"?tr.es:tr.en; });
+  $("s-trad-sel").value=S.tradition;
   $("s-lang").textContent=x.sLang; $("s-voice").textContent=x.sVoice; $("s-voice-s").textContent=x.sVoiceS;
   $("s-key").textContent=x.sKey; $("s-key-s").textContent=(HAS_BACKEND||S.key)?x.sKeyOn:x.sKeyOff;
   $("s-key-btn").textContent=x.change; $("s-clear").textContent=x.clear; $("s-disc").textContent=x.sDisc||$("s-disc").textContent;
@@ -379,13 +381,6 @@ $("ob-go").onclick=()=>{
    ARRANQUE
    =========================================================================== */
 function launchApp(){ $("app").classList.remove("hidden"); go("home"); $("voice-btn").classList.toggle("on",S.voice); }
-
-function makeStars(){
-  const c=$("stars"); let h="";
-  for(let i=0;i<40;i++){ h+=`<i style="left:${Math.floor(i*97%100)}%;top:${Math.floor(i*61%100)}%;animation-delay:${(i%5)*0.5}s"></i>`; }
-  c.innerHTML=h;
-}
-makeStars();
 
 // ¿usuario ya conocido?  -> directo a la app
 if(S.name || S.convos.length || S.journal.length){
