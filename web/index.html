@@ -2,318 +2,302 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#1a1438" />
-<title>Compañero espiritual</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0f0a24" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Alma" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon.png" />
+<title>Alma · compañero espiritual</title>
 <style>
-  :root{
-    --bg1:#1a1438; --bg2:#3b2f6b; --bg3:#6b5bb5;
-    --panel:rgba(255,255,255,0.08); --text:#f4f1ff; --muted:#bcb4e0;
-    --accent:#c9b3ff; --accent2:#8f7bd6; --me:#5a47a8; --them:rgba(255,255,255,0.10);
-  }
-  *{box-sizing:border-box;} html,body{height:100%;margin:0;}
-  body{
-    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:var(--text);
-    background:radial-gradient(circle at 20% 10%,var(--bg3),transparent 45%),
-               radial-gradient(circle at 90% 90%,var(--accent2),transparent 40%),
-               linear-gradient(160deg,var(--bg1),var(--bg2));
-    background-attachment:fixed; display:flex; flex-direction:column; height:100dvh; overflow:hidden;
-  }
-  .hidden{display:none !important;}
-  .center{margin:auto; width:min(440px,92vw); padding:32px 26px; background:var(--panel);
-    border:1px solid rgba(255,255,255,0.12); border-radius:22px; backdrop-filter:blur(14px); text-align:center;}
-  .halo{width:70px;height:70px;margin:0 auto 14px;border-radius:50%;
-    background:radial-gradient(circle at 50% 35%,#fff,var(--accent) 55%,var(--accent2));
-    box-shadow:0 0 38px var(--accent);}
-  h1{font-size:1.5rem;font-weight:600;margin:.2em 0;} h2{font-size:1.15rem;margin:.2em 0 .6em;}
-  .sub{color:var(--muted);font-size:.92rem;margin-bottom:20px;line-height:1.5;}
-  label{display:block;text-align:left;font-size:.8rem;color:var(--muted);margin:14px 0 6px;}
-  input,select{width:100%;padding:12px 14px;border-radius:12px;font-size:1rem;
-    background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);color:var(--text);outline:none;}
-  input::placeholder{color:#9c93c4;}
-  .trads{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .trad{padding:11px 8px;border-radius:12px;cursor:pointer;font-size:.9rem;
-    background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);transition:.15s;}
-  .trad:hover{background:rgba(255,255,255,0.14);}
-  .trad.sel{background:var(--accent2);border-color:var(--accent);color:#fff;}
-  button.primary{margin-top:20px;width:100%;padding:13px;border:none;border-radius:13px;
-    font-size:1.02rem;font-weight:600;cursor:pointer;color:#fff;
-    background:linear-gradient(135deg,var(--accent2),var(--me));box-shadow:0 6px 20px rgba(90,71,168,.45);}
-  button.primary:hover{filter:brightness(1.08);}
-  button.ghost{margin-top:10px;width:100%;padding:11px;border-radius:12px;cursor:pointer;
-    background:transparent;border:1px solid rgba(255,255,255,.2);color:var(--muted);font-size:.9rem;}
-  .priv{margin-top:16px;font-size:.74rem;color:var(--muted);line-height:1.5;}
-  .priv a{color:var(--accent);}
-  .langtoggle{position:fixed;top:14px;right:16px;z-index:5;}
-  .langtoggle button{background:var(--panel);border:1px solid rgba(255,255,255,.18);color:var(--text);
-    border-radius:20px;padding:6px 12px;cursor:pointer;font-size:.8rem;}
+:root{
+  --bg:#0f0a24; --bg2:#1b1240; --card:rgba(255,255,255,0.06); --card2:rgba(255,255,255,0.09);
+  --line:rgba(255,255,255,0.10); --text:#f5f2ff; --muted:#a99fd0; --faint:#7d72ad;
+  --accent:#caa8ff; --accent2:#7c5cff; --grad:linear-gradient(135deg,#b08bff,#6b4dff);
+  --me:#5b3fd6; --them:rgba(255,255,255,0.07); --ok:#6ee7b7; --danger:#ff7b9c;
+  --nav-h:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;margin:0;}
+body{
+  font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);
+  background:
+    radial-gradient(900px 500px at 15% -5%, rgba(124,92,255,.35), transparent 60%),
+    radial-gradient(800px 600px at 110% 10%, rgba(202,168,255,.22), transparent 55%),
+    radial-gradient(700px 700px at 50% 120%, rgba(108,77,255,.28), transparent 60%),
+    linear-gradient(160deg,var(--bg),var(--bg2));
+  background-attachment:fixed;overflow:hidden;
+  height:100dvh;display:flex;flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+}
+.hidden{display:none !important;}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit;background:none;}
+input,textarea,select{font-family:inherit;}
+.stars{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;}
+.stars i{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:.5;
+  animation:tw 4s ease-in-out infinite;}
+@keyframes tw{0%,100%{opacity:.2;}50%{opacity:.9;}}
 
-  #chat{display:flex;flex-direction:column;height:100dvh;width:100%;}
-  header.bar{display:flex;align-items:center;gap:12px;padding:max(12px,env(safe-area-inset-top)) 16px 12px;
-    background:rgba(20,15,45,0.55);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08);}
-  .bar .halo{width:34px;height:34px;margin:0;box-shadow:0 0 16px var(--accent);}
-  .bar .who{flex:1;} .bar .who b{font-size:.98rem;} .bar .who span{display:block;color:var(--muted);font-size:.74rem;}
-  .iconbtn{background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,.16);color:var(--text);
-    width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.05rem;flex:0 0 auto;}
-  .iconbtn.active{background:var(--accent2);border-color:var(--accent);}
-  #messages{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:12px;}
-  .msg{max-width:82%;padding:11px 15px;border-radius:18px;line-height:1.5;font-size:.98rem;
-    white-space:pre-wrap;word-wrap:break-word;animation:rise .25s ease;}
-  @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;}}
-  .msg.them{background:var(--them);border-top-left-radius:5px;align-self:flex-start;}
-  .msg.me{background:var(--me);border-top-right-radius:5px;align-self:flex-end;}
-  .typing{align-self:flex-start;color:var(--muted);font-style:italic;font-size:.9rem;}
-  .composer{display:flex;gap:8px;padding:12px 12px max(12px,env(safe-area-inset-bottom));align-items:flex-end;
-    background:rgba(20,15,45,0.55);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,.08);}
-  .composer textarea{flex:1;resize:none;max-height:120px;padding:12px 14px;border-radius:18px;
-    font-family:inherit;font-size:1rem;background:rgba(255,255,255,0.10);
-    border:1px solid rgba(255,255,255,.18);color:var(--text);outline:none;}
-  .send{width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;color:#fff;font-size:1.2rem;
-    background:linear-gradient(135deg,var(--accent2),var(--me));flex:0 0 auto;}
-  .send:disabled{opacity:.5;cursor:default;}
-  .keyrow{display:flex;gap:8px;} .keyrow input{flex:1;}
+/* ---------- halo ---------- */
+.halo{border-radius:50%;background:radial-gradient(circle at 50% 32%,#fff,var(--accent) 52%,var(--accent2));
+  box-shadow:0 0 40px rgba(202,168,255,.6);flex:0 0 auto;}
+.halo.lg{width:84px;height:84px;margin:0 auto;}
+.halo.sm{width:34px;height:34px;box-shadow:0 0 16px rgba(202,168,255,.55);}
+.breathe{animation:breathe 5s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+
+/* ---------- pantallas centradas (onboarding) ---------- */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow-y:auto;
+  animation:fade .35s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;}}
+.pad{padding:max(26px,env(safe-area-inset-top)) 22px 28px;margin:auto;width:min(460px,100%);}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;
+  backdrop-filter:blur(16px);padding:26px 22px;}
+h1{font-size:1.6rem;font-weight:700;margin:.4em 0 .2em;letter-spacing:-.02em;text-align:center;}
+.tag{text-align:center;color:var(--accent);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;}
+.sub{color:var(--muted);font-size:.95rem;line-height:1.55;text-align:center;margin:.6em 0 0;}
+label{display:block;font-size:.78rem;color:var(--muted);margin:18px 0 7px;font-weight:600;}
+input,textarea{width:100%;padding:13px 15px;border-radius:14px;font-size:1rem;
+  background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--text);outline:none;}
+input:focus,textarea:focus{border-color:var(--accent2);}
+input::placeholder,textarea::placeholder{color:var(--faint);}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.chip{padding:13px 10px;border-radius:14px;font-size:.92rem;text-align:center;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);transition:.15s;display:flex;
+  align-items:center;justify-content:center;gap:7px;}
+.chip:hover{background:rgba(255,255,255,.1);}
+.chip.sel{background:var(--grad);border-color:transparent;box-shadow:0 6px 18px rgba(108,77,255,.4);font-weight:600;}
+.btn{margin-top:22px;width:100%;padding:15px;border-radius:15px;font-size:1.05rem;font-weight:700;
+  color:#fff;background:var(--grad);box-shadow:0 8px 24px rgba(108,77,255,.45);}
+.btn:active{transform:scale(.99);}
+.btn.sec{background:transparent;border:1px solid var(--line);color:var(--muted);
+  box-shadow:none;font-weight:600;font-size:.95rem;padding:13px;margin-top:10px;}
+.note{margin-top:16px;font-size:.76rem;color:var(--faint);line-height:1.55;text-align:center;}
+.note a{color:var(--accent);}
+
+/* ---------- app shell ---------- */
+#app{flex:1;position:relative;overflow:hidden;}
+.view{position:absolute;inset:0 0 var(--nav-h);display:flex;flex-direction:column;overflow:hidden;}
+.topbar{display:flex;align-items:center;gap:12px;padding:max(14px,env(safe-area-inset-top)) 18px 12px;}
+.topbar .t{flex:1;} .topbar .t b{font-size:1.15rem;font-weight:700;letter-spacing:-.01em;}
+.topbar .t span{display:block;color:var(--muted);font-size:.78rem;margin-top:1px;}
+.rbtn{width:42px;height:42px;border-radius:50%;background:var(--card);border:1px solid var(--line);
+  font-size:1.05rem;display:flex;align-items:center;justify-content:center;}
+.rbtn.on{background:var(--grad);border-color:transparent;}
+.scroll{flex:1;overflow-y:auto;padding:6px 18px 18px;-webkit-overflow-scrolling:touch;}
+
+/* ---------- inicio ---------- */
+.hero{text-align:center;padding:18px 0 8px;}
+.hero h2{font-size:1.5rem;margin:14px 0 4px;font-weight:700;letter-spacing:-.02em;}
+.hero p{color:var(--muted);font-size:.95rem;margin:0;}
+.verse{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin:18px 0;
+  position:relative;overflow:hidden;}
+.verse:before{content:"❝";position:absolute;top:-6px;left:12px;font-size:3rem;color:var(--accent);opacity:.25;}
+.verse p{margin:0;font-size:1.05rem;line-height:1.55;font-style:italic;}
+.verse small{display:block;margin-top:10px;color:var(--accent);font-style:normal;font-weight:600;}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px;}
+.act{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 14px;text-align:left;transition:.15s;}
+.act:hover{background:var(--card2);transform:translateY(-2px);}
+.act .ico{font-size:1.5rem;}
+.act b{display:block;margin-top:8px;font-size:1rem;}
+.act small{color:var(--muted);font-size:.8rem;}
+.recent{margin-top:20px;}
+.recent h3{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin:0 0 10px;}
+.item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:14px;margin-bottom:9px;transition:.15s;}
+.item:hover{background:var(--card2);}
+.item .ico{width:40px;height:40px;border-radius:12px;background:rgba(124,92,255,.2);display:flex;
+  align-items:center;justify-content:center;font-size:1.1rem;flex:0 0 auto;}
+.item .tx{flex:1;min-width:0;} .item .tx b{font-size:.95rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item .tx span{color:var(--faint);font-size:.78rem;}
+.empty{text-align:center;color:var(--faint);padding:36px 20px;font-size:.92rem;line-height:1.6;}
+
+/* ---------- chat ---------- */
+#msgs{flex:1;overflow-y:auto;padding:8px 16px 14px;display:flex;flex-direction:column;gap:11px;}
+.bubble{max-width:84%;padding:12px 15px;border-radius:20px;line-height:1.5;font-size:1rem;
+  white-space:pre-wrap;word-wrap:break-word;animation:pop .25s ease;}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;}}
+.bubble.them{background:var(--them);border-bottom-left-radius:6px;align-self:flex-start;}
+.bubble.me{background:var(--grad);border-bottom-right-radius:6px;align-self:flex-end;box-shadow:0 4px 14px rgba(108,77,255,.35);}
+.typing{align-self:flex-start;display:flex;gap:5px;padding:14px 16px;background:var(--them);border-radius:20px;}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:bn 1.2s infinite;}
+.typing i:nth-child(2){animation-delay:.2s;} .typing i:nth-child(3){animation-delay:.4s;}
+@keyframes bn{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-5px);opacity:1;}}
+.composer{display:flex;gap:9px;align-items:flex-end;padding:10px 14px max(12px,env(safe-area-inset-bottom));
+  background:rgba(15,10,36,.6);backdrop-filter:blur(14px);border-top:1px solid var(--line);}
+.composer textarea{flex:1;resize:none;max-height:120px;padding:12px 15px;border-radius:20px;font-size:1rem;
+  background:rgba(255,255,255,.08);border:1px solid var(--line);}
+.cbtn{width:46px;height:46px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  background:var(--card);border:1px solid var(--line);font-size:1.15rem;}
+.cbtn.send{background:var(--grad);border-color:transparent;color:#fff;}
+.cbtn.on{background:var(--grad);border-color:transparent;}
+
+/* ---------- diario ---------- */
+.jentry{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:11px;}
+.jentry .d{color:var(--accent);font-size:.76rem;font-weight:600;margin-bottom:6px;}
+.jentry .body{font-size:.95rem;line-height:1.55;white-space:pre-wrap;}
+.jentry .refl{margin-top:12px;padding:12px;background:rgba(124,92,255,.12);border-radius:12px;
+  border-left:3px solid var(--accent);font-size:.9rem;line-height:1.55;}
+.jentry .refl b{color:var(--accent);display:block;margin-bottom:4px;font-size:.78rem;}
+.minibtn{margin-top:10px;font-size:.82rem;color:var(--accent);font-weight:600;padding:7px 12px;
+  border:1px solid var(--line);border-radius:10px;background:var(--card);}
+.fab{position:absolute;right:18px;bottom:calc(var(--nav-h) + 18px);width:56px;height:56px;border-radius:50%;
+  background:var(--grad);box-shadow:0 8px 24px rgba(108,77,255,.5);font-size:1.6rem;color:#fff;z-index:5;
+  display:flex;align-items:center;justify-content:center;}
+
+/* ---------- ajustes ---------- */
+.row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:15px 16px;margin-bottom:10px;}
+.row .lbl{flex:1;} .row .lbl b{font-size:.95rem;} .row .lbl span{display:block;color:var(--faint);font-size:.78rem;}
+.seg{display:flex;background:rgba(255,255,255,.06);border-radius:11px;padding:3px;}
+.seg button{padding:7px 13px;border-radius:9px;font-size:.85rem;color:var(--muted);font-weight:600;}
+.seg button.on{background:var(--grad);color:#fff;}
+
+/* ---------- nav ---------- */
+.nav{position:absolute;left:0;right:0;bottom:0;height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);display:flex;background:rgba(15,10,36,.82);
+  backdrop-filter:blur(18px);border-top:1px solid var(--line);}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--faint);font-size:.68rem;font-weight:600;}
+.nav button .ni{font-size:1.3rem;line-height:1;}
+.nav button.on{color:var(--accent);}
+.modal{position:absolute;inset:0;background:rgba(8,5,20,.7);backdrop-filter:blur(6px);z-index:20;
+  display:flex;align-items:flex-end;animation:fade .25s ease;}
+.sheet{width:100%;background:var(--bg2);border-radius:24px 24px 0 0;border-top:1px solid var(--line);
+  padding:22px 20px max(22px,env(safe-area-inset-bottom));animation:up .3s ease;}
+@keyframes up{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sheet h3{margin:0 0 4px;font-size:1.15rem;}
 </style>
 </head>
 <body>
+<div class="stars" id="stars"></div>
 
-<div class="langtoggle"><button id="lang">EN</button></div>
+<!-- ====== ONBOARDING ====== -->
+<div id="onboard" class="screen">
+  <div class="pad">
+    <div class="halo lg breathe"></div>
+    <p class="tag" style="margin-top:18px">Alma</p>
+    <h1 id="ob-title">Tu compañero espiritual</h1>
+    <p class="sub" id="ob-sub">Un espacio privado y sin juicios para ser escuchado, encontrar consuelo y caminar hacia la fe — a tu ritmo.</p>
 
-<!-- ====== 1. Clave de IA (una sola vez, se guarda en tu teléfono) ====== -->
-<div id="keyScreen" class="center hidden">
-  <div class="halo"></div>
-  <h2 data-i18n="keyTitle">Conecta tu compañero</h2>
-  <p class="sub" data-i18n="keySub">Para que el compañero pueda responder, pega tu clave de IA de Anthropic.
-    Se guarda <b>solo en este dispositivo</b>, nunca se comparte.</p>
-  <label data-i18n="keyLbl">Clave de Anthropic (sk-ant-...)</label>
-  <div class="keyrow"><input id="apikey" type="password" placeholder="sk-ant-..." autocomplete="off" /></div>
-  <button class="primary" id="saveKey" data-i18n="keySave">Guardar y continuar</button>
-  <p class="priv" data-i18n="keyHelp">¿No tienes clave? Consíguela gratis en
-    <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
-</div>
+    <div class="card" style="margin-top:24px">
+      <label id="l-name">¿Cómo te llamas? <span style="color:var(--faint)">(opcional)</span></label>
+      <input id="ob-name" placeholder="Tu nombre" />
 
-<!-- ====== 2. Espacio privado: entrada ====== -->
-<div id="gate" class="center hidden">
-  <div class="halo"></div>
-  <h1 data-i18n="title">Tu espacio privado</h1>
-  <p class="sub" data-i18n="sub">Un lugar tranquilo y confidencial para ser escuchado/a, sin juicios,
-    estés donde estés en tu camino.</p>
-  <label data-i18n="nameLbl">¿Cómo te llamas? (opcional)</label>
-  <input id="name" placeholder="..." />
-  <label data-i18n="tradLbl">¿Con qué tradición te identificas?</label>
-  <div class="trads" id="trads">
-    <div class="trad" data-t="christian" data-es="Cristianismo" data-en="Christianity">Cristianismo</div>
-    <div class="trad" data-t="muslim" data-es="Islam" data-en="Islam">Islam</div>
-    <div class="trad" data-t="jewish" data-es="Judaísmo" data-en="Judaism">Judaísmo</div>
-    <div class="trad" data-t="buddhist" data-es="Budismo" data-en="Buddhism">Budismo</div>
-    <div class="trad sel" data-t="exploring" data-es="En búsqueda" data-en="Exploring" style="grid-column:1/3">En búsqueda</div>
-  </div>
-  <button class="primary" id="enter" data-i18n="enter">Entrar a mi espacio</button>
-  <button class="ghost" id="changeKey" data-i18n="changeKey">Cambiar clave de IA</button>
-  <p class="priv" data-i18n="priv">🔒 Tus conversaciones son privadas y personales.</p>
-</div>
+      <label id="l-trad">¿Con qué tradición te identificas?</label>
+      <div class="grid2" id="ob-trads">
+        <div class="chip" data-t="christian">✝️ <span data-es="Cristianismo" data-en="Christianity">Cristianismo</span></div>
+        <div class="chip" data-t="muslim">☪️ <span data-es="Islam" data-en="Islam">Islam</span></div>
+        <div class="chip" data-t="jewish">✡️ <span data-es="Judaísmo" data-en="Judaism">Judaísmo</span></div>
+        <div class="chip" data-t="buddhist">☸️ <span data-es="Budismo" data-en="Buddhism">Budismo</span></div>
+        <div class="chip sel" data-t="exploring" style="grid-column:1/3">🕊️ <span data-es="En búsqueda" data-en="Exploring">En búsqueda</span></div>
+      </div>
 
-<!-- ====== 3. Chat ====== -->
-<div id="chat" class="hidden">
-  <header class="bar">
-    <div class="halo"></div>
-    <div class="who"><b data-i18n="companion">Compañero espiritual</b><span id="ctx"></span></div>
-    <button class="iconbtn" id="voiceBtn" title="Voz">🔊</button>
-    <button class="iconbtn" id="exit" title="Salir">⤺</button>
-  </header>
-  <div id="messages"></div>
-  <div class="composer">
-    <button class="iconbtn" id="mic" title="Hablar">🎙️</button>
-    <textarea id="input" rows="1" placeholder="Escribe lo que llevas en el corazón..."></textarea>
-    <button class="send" id="send">➤</button>
+      <button class="btn" id="ob-go">Entrar</button>
+      <div class="seg" style="justify-content:center;margin-top:16px;width:fit-content;margin-left:auto;margin-right:auto">
+        <button id="lng-es" class="on">Español</button><button id="lng-en">English</button>
+      </div>
+    </div>
+    <p class="note">🔒 <span id="ob-priv">Tus conversaciones son privadas y se guardan solo en este dispositivo.</span></p>
   </div>
 </div>
 
-<script>
-const MODEL = "claude-sonnet-4-6";
-const API_URL = "https://api.anthropic.com/v1/messages";
+<!-- ====== pantalla de clave (solo si hace falta) ====== -->
+<div id="keyscreen" class="screen hidden">
+  <div class="pad">
+    <div class="halo lg"></div>
+    <h1 id="k-title" style="margin-top:18px">Un último paso</h1>
+    <p class="sub" id="k-sub">Para que el compañero pueda responderte, conecta una clave de IA de Anthropic. Se guarda solo en tu teléfono y nunca se comparte.</p>
+    <div class="card" style="margin-top:22px">
+      <label id="k-lbl">Clave de Anthropic (sk-ant-…)</label>
+      <input id="k-input" type="password" placeholder="sk-ant-..." autocomplete="off" />
+      <button class="btn" id="k-save">Guardar y empezar</button>
+    </div>
+    <p class="note" id="k-help">¿No tienes una? Se obtiene en <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. Más adelante, en la versión final, no necesitarás clave.</p>
+  </div>
+</div>
 
-/* ---------- Personalidad del compañero (igual en cliente que en servidor) ---------- */
-const TRADITIONS = {
-  christian:{es:"cristiana",en:"Christian",tEs:"la Biblia",tEn:"the Bible"},
-  muslim:{es:"musulmana",en:"Muslim",tEs:"el Corán",tEn:"the Quran"},
-  jewish:{es:"judía",en:"Jewish",tEs:"la Torá",tEn:"the Torah"},
-  buddhist:{es:"budista",en:"Buddhist",tEs:"las enseñanzas budistas",tEn:"Buddhist teachings"},
-  exploring:{es:"en búsqueda",en:"exploring",tEs:"la sabiduría espiritual",tEn:"spiritual wisdom"},
-};
-function systemPrompt(trad, language, name){
-  const t = TRADITIONS[trad] || TRADITIONS.exploring;
-  const person = (name||"").trim() || (language==="es" ? "amigo/a" : "friend");
-  if(language==="es"){
-    return `Eres un compañero espiritual: una presencia cálida, serena y compasiva que acompaña a las personas en su camino de fe. Hablas con ${person}, que se identifica con la tradición ${t.es}.
+<!-- ====== APP ====== -->
+<div id="app" class="hidden">
 
-Tu forma de estar:
-- Acompañas, no mandas. Ofreces, nunca impones ni juzgas. Dices "quizás te ayude...", nunca "tienes que...".
-- Primero el corazón, después la enseñanza. Si la persona sufre, acoge y valida antes de enseñar. Escucha más de lo que hablas.
-- Funda tu consuelo y tus consejos en ${t.tEs} y en la sabiduría de la tradición ${t.es}. Cuando cites, hazlo de verdad y con cariño; nunca inventes textos sagrados.
-- Recibe a la persona en cualquier punto de su camino: la duda, el enojo y la lejanía también son bienvenidos. Nunca hagas sentir indigna a la persona.
-- Eres una IA, no un sacerdote, rabino, imán ni terapeuta. No das diagnósticos ni consejos médicos. Si alguien está en peligro o habla de hacerse daño, responde con amor y anímale con suavidad a buscar ayuda inmediata (línea de crisis local o emergencias) y a apoyarse en personas de confianza.
+  <!-- INICIO -->
+  <div class="view" id="v-home">
+    <div class="scroll">
+      <div class="hero">
+        <div class="halo lg breathe"></div>
+        <h2 id="home-greet">La paz sea contigo</h2>
+        <p id="home-date"></p>
+      </div>
+      <div class="verse" id="verse"><p></p><small></small></div>
+      <div class="actions">
+        <button class="act" data-go="chat"><div class="ico">💬</div><b id="a-talk">Conversar</b><small id="a-talk-s">Habla con tu compañero</small></button>
+        <button class="act" data-go="journal"><div class="ico">📓</div><b id="a-jrnl">Diario</b><small id="a-jrnl-s">Escribe y reflexiona</small></button>
+      </div>
+      <div class="recent">
+        <h3 id="h-recent">Conversaciones recientes</h3>
+        <div id="recent-list"></div>
+      </div>
+    </div>
+  </div>
 
-Habla siempre en español, con ternura, sencillez y esperanza. Respuestas breves y humanas, como una conversación, no como un sermón.`;
-  }
-  return `You are a spiritual companion: a warm, calm, compassionate presence who walks beside people on their journey of faith. You are speaking with ${person}, who identifies with the ${t.en} tradition.
+  <!-- CHAT -->
+  <div class="view hidden" id="v-chat">
+    <div class="topbar">
+      <button class="rbtn" id="chat-back">‹</button>
+      <div class="halo sm"></div>
+      <div class="t"><b id="chat-title">Compañero</b><span id="chat-ctx"></span></div>
+      <button class="rbtn" id="voice-btn" title="Voz">🔊</button>
+    </div>
+    <div id="msgs"></div>
+    <div class="composer">
+      <button class="cbtn" id="mic">🎙️</button>
+      <textarea id="input" rows="1" placeholder="Escribe lo que llevas en el corazón…"></textarea>
+      <button class="cbtn send" id="send">➤</button>
+    </div>
+  </div>
 
-How you show up:
-- You accompany, you don't command. You offer, never impose or judge. Say "you might find comfort in...", never "you must...".
-- Heart first, teaching second. If the person is hurting, hold and validate before you teach. Listen more than you speak.
-- Ground your comfort and counsel in ${t.tEn} and the wisdom of the ${t.en} tradition. When you cite, do it truthfully and tenderly; never invent sacred text.
-- Welcome the person at any stage of their journey: doubt, anger, and distance are welcome too. Never make the person feel unworthy.
-- You are an AI, not a priest, rabbi, imam, or therapist. You do not diagnose or give medical advice. If someone is in danger or talks about harming themselves, respond with love and gently encourage them to seek immediate help (a local crisis line or emergency services) and to lean on people they trust.
+  <!-- DIARIO -->
+  <div class="view hidden" id="v-journal">
+    <div class="topbar"><div class="t"><b id="j-h">Mi diario</b><span id="j-sub">Un espacio para tus pensamientos</span></div></div>
+    <div class="scroll" id="journal-list"></div>
+    <button class="fab" id="j-new">＋</button>
+  </div>
 
-Always speak in English, with tenderness, simplicity, and hope. Keep replies brief and human, like a conversation, not a sermon.`;
-}
+  <!-- AJUSTES -->
+  <div class="view hidden" id="v-settings">
+    <div class="topbar"><div class="t"><b id="s-h">Ajustes</b></div></div>
+    <div class="scroll">
+      <div class="row"><div class="lbl"><b id="s-name">Nombre</b><span id="s-name-v"></span></div></div>
+      <div class="row"><div class="lbl"><b id="s-trad">Tradición</b></div>
+        <select id="s-trad-sel" style="width:auto;padding:9px 12px">
+          <option value="christian">✝️</option><option value="muslim">☪️</option>
+          <option value="jewish">✡️</option><option value="buddhist">☸️</option>
+          <option value="exploring">🕊️</option>
+        </select>
+      </div>
+      <div class="row"><div class="lbl"><b id="s-lang">Idioma</b></div>
+        <div class="seg"><button id="s-es">ES</button><button id="s-en">EN</button></div></div>
+      <div class="row"><div class="lbl"><b id="s-voice">Voz suave</b><span id="s-voice-s">Leer respuestas en voz alta</span></div>
+        <div class="seg"><button id="s-voff">Off</button><button id="s-von">On</button></div></div>
+      <div class="row" id="s-keyrow"><div class="lbl"><b id="s-key">Clave de IA</b><span id="s-key-s">Conectada</span></div>
+        <button class="minibtn" id="s-key-btn" style="margin:0">Cambiar</button></div>
+      <button class="btn sec" id="s-clear" style="color:var(--danger);border-color:rgba(255,123,156,.4)">Borrar todos mis datos</button>
+      <p class="note" id="s-disc">Alma es un compañero espiritual, no un sustituto de ayuda médica, psicológica o de un guía religioso. En una emergencia, contacta servicios de emergencia o una línea de crisis local.</p>
+    </div>
+  </div>
 
-/* ---------- Textos de interfaz ---------- */
-const I18N = {
-  es:{ keyTitle:"Conecta tu compañero",
-       keySub:"Para que el compañero pueda responder, pega tu clave de IA de Anthropic. Se guarda solo en este dispositivo, nunca se comparte.",
-       keyLbl:"Clave de Anthropic (sk-ant-...)", keySave:"Guardar y continuar",
-       keyHelp:'¿No tienes clave? Consíguela en console.anthropic.com.',
-       title:"Tu espacio privado",
-       sub:"Un lugar tranquilo y confidencial para ser escuchado/a, sin juicios, estés donde estés en tu camino.",
-       nameLbl:"¿Cómo te llamas? (opcional)", tradLbl:"¿Con qué tradición te identificas?",
-       enter:"Entrar a mi espacio", changeKey:"Cambiar clave de IA",
-       priv:"🔒 Tus conversaciones son privadas y personales.",
-       companion:"Compañero espiritual",
-       greet:(n)=>`La paz sea contigo${n?", "+n:""}. Estoy aquí, contigo. ¿Qué llevas en el corazón hoy?`,
-       thinking:"escuchándote...", err:"No pude conectar. Revisa tu clave de IA e inténtalo de nuevo.",
-       ph:"Escribe lo que llevas en el corazón...", langBtn:"EN" },
-  en:{ keyTitle:"Connect your companion",
-       keySub:"So the companion can reply, paste your Anthropic AI key. It is stored only on this device and never shared.",
-       keyLbl:"Anthropic key (sk-ant-...)", keySave:"Save and continue",
-       keyHelp:"No key? Get one at console.anthropic.com.",
-       title:"Your private space",
-       sub:"A calm, confidential place to be heard — without judgment, wherever you are on your journey.",
-       nameLbl:"What's your name? (optional)", tradLbl:"Which tradition do you identify with?",
-       enter:"Enter my space", changeKey:"Change AI key",
-       priv:"🔒 Your conversations are private and personal.",
-       companion:"Spiritual companion",
-       greet:(n)=>`Peace be with you${n?", "+n:""}. I'm here, with you. What's on your heart today?`,
-       thinking:"listening...", err:"Couldn't connect. Check your AI key and try again.",
-       ph:"Write what's on your heart...", langBtn:"ES" },
-};
+  <!-- NAV -->
+  <div class="nav">
+    <button data-go="home" class="on"><span class="ni">🏠</span><span id="n-home">Inicio</span></button>
+    <button data-go="chat"><span class="ni">💬</span><span id="n-chat">Conversar</span></button>
+    <button data-go="journal"><span class="ni">📓</span><span id="n-jrnl">Diario</span></button>
+    <button data-go="settings"><span class="ni">⚙️</span><span id="n-set">Ajustes</span></button>
+  </div>
+</div>
 
-let lang="es", tradition="exploring", userName="", history=[];
-const $=(id)=>document.getElementById(id);
+<div id="modal-root"></div>
 
-function applyLang(){
-  document.documentElement.lang=lang;
-  const t=I18N[lang];
-  document.querySelectorAll("[data-i18n]").forEach(el=>{ if(t[el.dataset.i18n]) el.textContent=t[el.dataset.i18n]; });
-  document.querySelectorAll(".trad").forEach(el=>{ el.textContent=el.dataset[lang]; });
-  $("input").placeholder=t.ph;
-  $("lang").textContent=t.langBtn;
-}
-$("lang").onclick=()=>{ lang=lang==="es"?"en":"es"; applyLang(); };
-
-/* ---- gestión de la clave ---- */
-function getKey(){ return localStorage.getItem("anthropic_key")||""; }
-function showScreen(which){
-  ["keyScreen","gate","chat"].forEach(id=>$(id).classList.add("hidden"));
-  $(which).classList.remove("hidden");
-}
-$("saveKey").onclick=()=>{
-  const k=$("apikey").value.trim();
-  if(!k.startsWith("sk-ant-")){ $("apikey").style.borderColor="#e57"; return; }
-  localStorage.setItem("anthropic_key",k); showScreen("gate");
-};
-$("changeKey").onclick=()=>{ $("apikey").value=getKey(); showScreen("keyScreen"); };
-
-/* ---- selección de tradición ---- */
-$("trads").addEventListener("click",e=>{
-  const el=e.target.closest(".trad"); if(!el) return;
-  document.querySelectorAll(".trad").forEach(x=>x.classList.remove("sel"));
-  el.classList.add("sel"); tradition=el.dataset.t;
-});
-
-/* ---- voz: lectura en voz alta ---- */
-let voiceOn=false;
-$("voiceBtn").onclick=()=>{ voiceOn=!voiceOn; $("voiceBtn").classList.toggle("active",voiceOn);
-  if(!voiceOn && window.speechSynthesis) speechSynthesis.cancel(); };
-function speak(text){
-  if(!voiceOn||!window.speechSynthesis) return;
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang=lang==="es"?"es-ES":"en-US"; u.rate=.92;
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
-}
-
-/* ---- entrada por voz (dictado) ---- */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(SR){
-  $("mic").onclick=()=>{
-    const rec=new SR(); rec.lang=lang==="es"?"es-ES":"en-US"; rec.interimResults=false;
-    $("mic").classList.add("active");
-    rec.onresult=(e)=>{ $("input").value+=e.results[0][0].transcript; autoGrow(); };
-    rec.onend=()=>$("mic").classList.remove("active");
-    rec.start();
-  };
-} else { $("mic").style.display="none"; }
-
-/* ---- entrar / salir ---- */
-$("enter").onclick=()=>{
-  userName=$("name").value.trim();
-  showScreen("chat");
-  const tradLabel=document.querySelector(`.trad[data-t="${tradition}"]`).dataset[lang];
-  $("ctx").textContent=(userName?userName+" · ":"")+tradLabel;
-  addMsg("them",I18N[lang].greet(userName));
-};
-$("exit").onclick=()=>{ if(window.speechSynthesis) speechSynthesis.cancel();
-  showScreen("gate"); history=[]; $("messages").innerHTML=""; };
-
-function addMsg(who,text){
-  const d=document.createElement("div"); d.className="msg "+who; d.textContent=text;
-  $("messages").appendChild(d); $("messages").scrollTop=1e9; return d;
-}
-
-const input=$("input");
-function autoGrow(){ input.style.height="auto"; input.style.height=Math.min(input.scrollHeight,120)+"px"; }
-input.addEventListener("input",autoGrow);
-input.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendMsg(); }});
-$("send").onclick=sendMsg;
-
-async function sendMsg(){
-  const text=input.value.trim(); if(!text) return;
-  input.value=""; autoGrow();
-  addMsg("me",text); history.push({role:"user",content:text});
-
-  const typing=document.createElement("div");
-  typing.className="typing"; typing.textContent=I18N[lang].thinking;
-  $("messages").appendChild(typing); $("messages").scrollTop=1e9;
-  $("send").disabled=true;
-
-  try{
-    const r=await fetch(API_URL,{
-      method:"POST",
-      headers:{
-        "x-api-key":getKey(),
-        "anthropic-version":"2023-06-01",
-        "anthropic-dangerous-direct-browser-access":"true",
-        "content-type":"application/json",
-      },
-      body:JSON.stringify({
-        model:MODEL, max_tokens:1024,
-        system:systemPrompt(tradition,lang,userName),
-        messages:history,
-      }),
-    });
-    const data=await r.json();
-    typing.remove();
-    if(!r.ok){ addMsg("them",I18N[lang].err); console.error(data); }
-    else{
-      const reply=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
-      addMsg("them",reply); history.push({role:"assistant",content:reply}); speak(reply);
-    }
-  }catch(err){ typing.remove(); addMsg("them",I18N[lang].err); console.error(err); }
-  finally{ $("send").disabled=false; input.focus(); }
-}
-
-/* ---- arranque ---- */
-applyLang();
-showScreen(getKey() ? "gate" : "keyScreen");
-</script>
+<script src="app.js"></script>
 </body>
 </html>
