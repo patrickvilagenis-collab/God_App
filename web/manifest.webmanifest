@@ -1,0 +1,16 @@
+{
+  "name": "Alma · compañero espiritual",
+  "short_name": "Alma",
+  "description": "Un compañero espiritual privado y sin juicios: consuelo, guía y acompañamiento hacia la fe.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0a24",
+  "theme_color": "#0f0a24",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

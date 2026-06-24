@@ -20,7 +20,9 @@ from pathlib import Path
 import requests
 
 PORT = int(os.environ.get("PORT", "8000"))
-PUBLIC_DIR = Path(__file__).parent / "public"
+# Sirve la app pública nueva (web/). Cae a app/public solo si web/ no existe.
+_root = Path(__file__).resolve().parent.parent
+PUBLIC_DIR = _root / "web" if (_root / "web").exists() else Path(__file__).parent / "public"
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 MODEL = os.environ.get("COMPANION_MODEL", "claude-sonnet-4-6")
 API_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com").rstrip("/") + "/v1/messages"
@@ -91,8 +93,10 @@ like a conversation, not a sermon."""
 
 # --- Llamada a la IA -------------------------------------------------------
 
-def call_companion(messages, tradition, language, name):
-    system = build_system_prompt(tradition, language, name)
+def call_companion(messages, tradition, language, name, system=None):
+    # Si el frontend ya manda su propio system prompt, se respeta.
+    if not system:
+        system = build_system_prompt(tradition, language, name)
     payload = {
         "model": MODEL,
         "max_tokens": 1024,
@@ -132,6 +136,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 body.get("tradition", "exploring"),
                 body.get("language", "es"),
                 body.get("name", ""),
+                body.get("system"),
             )
             self._json({"reply": reply})
         except requests.HTTPError as e:
