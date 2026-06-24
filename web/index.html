@@ -189,6 +189,48 @@ input::placeholder,textarea::placeholder{color:var(--faint);}
 @keyframes up{from{transform:translateY(100%);}to{transform:translateY(0);}}
 .sheet h3{font-size:1.5rem;margin:0 0 4px;}
 .sheet textarea{margin-top:16px;}
+/* ---------- biblioteca ---------- */
+.lib-intro{font-family:var(--serif);font-style:italic;color:var(--muted);font-size:1.05rem;line-height:1.5;
+  text-align:center;margin:6px 0 22px;}
+.lib-card{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:20px;margin-bottom:12px;transition:.15s;box-shadow:var(--shadow);text-align:left;width:100%;}
+.lib-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+.lib-card .em{width:48px;height:48px;border-radius:12px;background:var(--gold-soft);color:var(--gold2);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.lib-card .em .svg{width:24px;height:24px;}
+.lib-card .info{flex:1;min-width:0;}
+.lib-card .info b{font-family:var(--serif);font-size:1.32rem;font-weight:600;display:block;}
+.lib-card .info span{color:var(--muted);font-size:.84rem;}
+.lib-card .chev{color:var(--faint);font-size:1.3rem;}
+.lib-list button{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;
+  padding:15px 18px;border:1px solid var(--line);border-radius:11px;background:var(--surface);margin-bottom:9px;
+  transition:.15s;box-shadow:var(--shadow);}
+.lib-list button:hover{border-color:var(--gold);}
+.lib-list button b{font-weight:600;font-size:1rem;}
+.lib-list button small{color:var(--faint);font-size:.8rem;}
+.chgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px;margin-top:4px;}
+.chgrid button{aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:var(--surface);
+  font-size:.98rem;font-weight:600;color:var(--ink2);transition:.15s;}
+.chgrid button:hover{border-color:var(--gold);background:var(--gold-soft);color:var(--gold2);}
+.reader{max-width:64ch;margin:0 auto;}
+.reader .rtitle{font-family:var(--serif);font-size:2rem;text-align:center;margin:6px 0 2px;}
+.reader .rmeta{text-align:center;color:var(--faint);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:24px;}
+.vrow{margin-bottom:14px;line-height:1.85;font-size:1.08rem;color:var(--ink2);}
+.vrow .vn{font-family:var(--sans);font-size:.66rem;font-weight:700;color:var(--gold2);vertical-align:super;
+  margin-right:7px;letter-spacing:.02em;}
+.reader .he{direction:rtl;font-size:1.3rem;line-height:2;color:var(--ink);margin-bottom:6px;}
+.loading{text-align:center;color:var(--faint);padding:40px;font-family:var(--serif);font-style:italic;font-size:1.1rem;}
+.rnav{display:flex;gap:10px;margin:28px 0 6px;}
+.rnav button{flex:1;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);
+  font-weight:600;font-size:.9rem;color:var(--ink2);transition:.15s;}
+.rnav button:hover:not(:disabled){border-color:var(--gold);color:var(--gold2);}
+.rnav button:disabled{opacity:.4;}
+.rask{width:100%;margin:10px 0 4px;padding:13px;border:1px solid var(--gold);border-radius:11px;
+  background:var(--gold-soft);color:var(--gold2);font-weight:600;font-size:.92rem;display:flex;
+  align-items:center;justify-content:center;gap:8px;transition:.15s;}
+.rask:hover{background:var(--gold);color:#fff;}
+.rask .svg{width:18px;height:18px;}
+
 @media(min-width:560px){ .view .scroll, #msgs{padding-left:max(22px,calc((100% - 600px)/2));padding-right:max(22px,calc((100% - 600px)/2));} }
 </style>
 </head>
@@ -206,6 +248,8 @@ input::placeholder,textarea::placeholder{color:var(--faint);}
   <symbol id="ic-voice" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></symbol>
   <symbol id="ic-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
   <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="ic-book" viewBox="0 0 24 24"><path d="M12 6.5C10 5.2 7.5 5.2 5 5.5v12c2.5-.3 5-.3 7 1 2-1.3 4.5-1.3 7-1v-12c-2.5-.3-5-.3-7 1z"/><path d="M12 6.5v12"/></symbol>
+  <symbol id="ic-talk" viewBox="0 0 24 24"><path d="M4 5.5h16v11H8l-4 3.5z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
 </svg>
 
 <!-- ====== ONBOARDING ====== -->
@@ -312,10 +356,20 @@ input::placeholder,textarea::placeholder{color:var(--faint);}
     </div>
   </div>
 
+  <!-- BIBLIOTECA -->
+  <div class="view hidden" id="v-library">
+    <div class="topbar">
+      <button class="rbtn hidden" id="lib-back"><svg class="svg"><use href="#ic-back"/></svg></button>
+      <div class="t"><b id="lib-title">Biblioteca</b><span id="lib-sub">Textos sagrados</span></div>
+    </div>
+    <div class="scroll" id="library-body"></div>
+  </div>
+
   <!-- NAV -->
   <div class="nav">
     <button data-go="home" class="on"><svg class="svg"><use href="#ic-home"/></svg><span id="n-home">Inicio</span></button>
     <button data-go="chat"><svg class="svg"><use href="#ic-chat"/></svg><span id="n-chat">Conversar</span></button>
+    <button data-go="library"><svg class="svg"><use href="#ic-book"/></svg><span id="n-lib">Biblioteca</span></button>
     <button data-go="journal"><svg class="svg"><use href="#ic-journal"/></svg><span id="n-jrnl">Diario</span></button>
     <button data-go="settings"><svg class="svg"><use href="#ic-settings"/></svg><span id="n-set">Ajustes</span></button>
   </div>
