@@ -32,3 +32,20 @@ A bilingual seeker can sign up privately, pour out what they're feeling by voice
 receive a compassionate scripture-grounded response in a soothing voice or text, journal
 about it, look up a passage, and be safely caught if they're in crisis — all without ever
 feeling judged.
+
+## 🌐 Página web pública (probar desde el móvil)
+
+La carpeta [`web/`](./web) es una **página pública** que funciona desde el teléfono.
+Llama a la IA directamente desde el navegador con tu propia clave de Anthropic, guardada
+solo en tu dispositivo (ideal para un prototipo; en la app real la clave irá en un servidor).
+
+**Para publicarla gratis con GitHub Pages (una sola vez):**
+1. En GitHub, entra al repositorio → **Settings** → **Pages**.
+2. En **Source**, elige **GitHub Actions**.
+3. Espera a que termine la acción "Deploy webpage to GitHub Pages" (pestaña **Actions**).
+4. Tu página quedará en: **https://patrickvilagenis-collab.github.io/god_app/**
+5. Ábrela en el móvil, pega tu clave de Anthropic una vez, y listo.
+
+> Nota: si la acción no se ejecuta desde esta rama, fusiona la rama a `main` y se publicará.
+
+La versión con servidor (clave oculta en el backend) está en [`app/`](./app) para desarrollo local.
