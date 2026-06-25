@@ -124,16 +124,23 @@ Always speak in English, with tenderness, restraint, and hope. Keep replies brie
 }
 
 /* ---------- llamada a la IA ---------- */
-async function askAI(messages, systemOverride){
-  const sys = systemOverride || systemPrompt();
+function reflectionSuffixLocal(){
+  return S.lang==="es"
+    ? "\n\nLa persona comparte una entrada de su diario. Responde con una reflexión breve, cálida y personal (3-5 frases), fundamentada en su tradición, ayudándole a procesar lo que escribió. No la juzgues."
+    : "\n\nThe person shares a journal entry. Respond with a brief, warm, personal reflection (3-5 sentences), grounded in their tradition, helping them process what they wrote. Do not judge them.";
+}
+async function askAI(messages, mode){
   if(HAS_BACKEND){
+    // El servidor construye el carácter del acompañante (clave protegida).
     const r = await fetch("/api/chat",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({messages,system:sys,model:MODEL})});
-    if(!r.ok) throw new Error("backend "+r.status);
+      body:JSON.stringify({messages, tradition:S.tradition, language:S.lang, name:S.name, mode:mode||"chat"})});
+    if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("backend "+r.status)); }
     const d = await r.json();
     return (d.reply||"").trim();
   }
-  // BYOK directo al navegador
+  // BYOK: clave del propio usuario, directo al navegador
+  let sys = systemPrompt();
+  if(mode==="reflection") sys += reflectionSuffixLocal();
   const r = await fetch(DIRECT_URL,{method:"POST",headers:{
     "x-api-key":S.key,"anthropic-version":"2023-06-01",
     "anthropic-dangerous-direct-browser-access":"true","content-type":"application/json"},
@@ -287,8 +294,7 @@ function renderJournal(){
       btn.onclick=async()=>{ if(!HAS_BACKEND&&!S.key){showKey();return;}
         btn.textContent=t().reflecting; btn.disabled=true;
         try{
-          const sys=systemPrompt()+"\n\nLa persona comparte una entrada de su diario. Responde con una reflexión breve, cálida y personal (3-5 frases), fundamentada en su tradición, ayudándole a procesar lo que escribió. No la juzgues.";
-          const refl=await askAI([{role:"user",content:en.text}],sys);
+          const refl=await askAI([{role:"user",content:en.text}],"reflection");
           en.reflection=refl; save(); renderJournal();
         }catch(e){ btn.textContent=t().reflect; btn.disabled=false; console.error(e); }
       };

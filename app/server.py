@@ -131,12 +131,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length) or b"{}")
+            system = body.get("system")
+            if not system and body.get("mode") == "reflection":
+                lang = body.get("language", "es")
+                system = build_system_prompt(body.get("tradition", "exploring"), lang, body.get("name", "")) + (
+                    "\n\nLa persona comparte una entrada de su diario. Responde con una reflexión breve, "
+                    "cálida y personal (3-5 frases), fundamentada en su tradición. No la juzgues."
+                    if lang == "es" else
+                    "\n\nThe person shares a journal entry. Respond with a brief, warm, personal reflection "
+                    "(3-5 sentences), grounded in their tradition. Do not judge them."
+                )
             reply = call_companion(
                 body.get("messages", []),
                 body.get("tradition", "exploring"),
                 body.get("language", "es"),
                 body.get("name", ""),
-                body.get("system"),
+                system,
             )
             self._json({"reply": reply})
         except requests.HTTPError as e:
