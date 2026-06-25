@@ -70,6 +70,7 @@ const T = {
        companion:"Acompañante", hello:n=>`La paz sea contigo${n?", "+n:""}. Estoy aquí, contigo. ¿Qué llevas en el corazón hoy?`,
        ph:"Escribe lo que sientes…", err:"No pude conectar. Revisa tu conexión o tu clave de IA.",
        voiceNote:"Nota de voz", transcribing:"Transcribiendo tu nota…",
+       micPrep:"Preparando micrófono…", recording:"Grabando",
        micDenied:"No pude acceder al micrófono. Revisa los permisos del navegador.",
        micUnsupported:"Tu navegador no permite grabar audio.",
        voiceErrTr:"No pude transcribir la nota. Tu nota se guardó; inténtalo de nuevo.",
@@ -90,6 +91,7 @@ const T = {
        companion:"Companion", hello:n=>`Peace be with you${n?", "+n:""}. I'm here, with you. What's on your heart today?`,
        ph:"Write what you feel…", err:"Couldn't connect. Check your connection or AI key.",
        voiceNote:"Voice note", transcribing:"Transcribing your note…",
+       micPrep:"Getting the mic ready…", recording:"Recording",
        micDenied:"Couldn't access the microphone. Check your browser permissions.",
        micUnsupported:"Your browser can't record audio.",
        voiceErrTr:"Couldn't transcribe the note. It was saved; please try again.",
@@ -255,6 +257,7 @@ function addBubble(who,text,scroll=true){
   $("msgs").appendChild(b); if(scroll)$("msgs").scrollTop=1e9; return b;
 }
 async function sendMsg(){
+  if(RECO.active||RECO.preparing){ stopRec(); return; }   // grabando: parar = enviar nota de voz
   const inp=$("input"); const text=inp.value.trim(); if(!text) return;
   if(!HAS_BACKEND && !S.key){ showKey(); return; }
   inp.value=""; autoGrow();
@@ -335,7 +338,7 @@ async function transcribe(blob){
   return (d.text||"").trim();
 }
 
-async function sendVoice(blob, dur){
+async function sendVoice(blob, dur, live=""){
   const c=getConvo(activeConvo)||(newChat(),getConvo(activeConvo));
   const id="v"+Date.now();
   try{ await idbPut(id,blob); }catch(e){ console.error(e); }
@@ -343,52 +346,114 @@ async function sendVoice(blob, dur){
   c.messages.push(msg); c.updated=Date.now();
   if(!c.title) c.title=t().voiceNote;
   save();
-  const bubble=addVoiceBubble("me", id, dur, "");
-  if(!HAS_BACKEND){ addHint(t().voiceNoServer); return; }   // GitHub Pages: sin transcripción
-  bubble._tx.style.display="block"; bubble._tx.className="vtext pending"; bubble._tx.textContent=t().transcribing;
+  live=(live||"").trim();
+  const bubble=addVoiceBubble("me", id, dur, live);   // muestra ya lo reconocido en vivo
+  if(live){ msg.voice.transcript=live; msg.content=live; if(c.title===t().voiceNote) c.title=live.slice(0,32); save(); }
+  if(!HAS_BACKEND){ if(!live) addHint(t().voiceNoServer); return; }   // GitHub Pages: sin servidor
   const typing=el("div","typing"); typing.innerHTML="<i></i><i></i><i></i>";
   $("msgs").appendChild(typing); $("msgs").scrollTop=1e9; $("send").disabled=true;
   try{
-    const text=await transcribe(blob);
-    if(!text){ typing.remove(); bubble._tx.style.display="none"; addHint(t().voiceEmpty); save(); return; }
-    msg.voice.transcript=text; msg.content=text; c.title=text.slice(0,32); save();
-    bubble._tx.className="vtext"; bubble._tx.textContent=text;
+    // Si el navegador ya reconoció la voz en vivo, respondemos al instante con ese texto.
+    // Si no (navegador sin reconocimiento), lo transcribe Groq en el servidor.
+    let text=live;
+    if(!text){
+      bubble._tx.style.display="block"; bubble._tx.className="vtext pending"; bubble._tx.textContent=t().transcribing;
+      text=await transcribe(blob);
+      if(!text){ typing.remove(); bubble._tx.style.display="none"; addHint(t().voiceEmpty); save(); return; }
+      msg.voice.transcript=text; msg.content=text; c.title=text.slice(0,32); save();
+      bubble._tx.className="vtext"; bubble._tx.textContent=text;
+    }
     const reply=await askAI(c.messages);
     typing.remove(); addBubble("them",reply);
     c.messages.push({role:"assistant",content:reply}); c.updated=Date.now(); save(); speak(reply);
-  }catch(e){ typing.remove(); bubble._tx.style.display="none"; addHint(t().voiceErrTr); console.error(e); }
+  }catch(e){ typing.remove(); if(!live){ bubble._tx.style.display="none"; } addHint(t().voiceErrTr); console.error(e); }
   finally{ $("send").disabled=false; }
 }
 
 /* grabación */
-const RECO={active:false, recorder:null, chunks:[], stream:null, start:0, timer:null};
-function setMicUI(on){ $("mic").classList.toggle("rec",on); $("mic").innerHTML = on ? svgUse("ic-stop") : svgUse("ic-mic"); }
+const RECO={active:false, preparing:false, recorder:null, chunks:[], stream:null, start:0, timer:null, tick:null, ph:"", recog:null, liveText:"", finalText:"", prevVal:""};
+function setMicUI(state){  // state: "" | "prep" | "rec"
+  const m=$("mic");
+  m.classList.toggle("rec", state==="rec");
+  m.classList.toggle("prep", state==="prep");
+  m.innerHTML = state==="rec" ? svgUse("ic-stop") : svgUse("ic-mic");
+}
+function showRecTime(){ const s=Math.round((Date.now()-RECO.start)/1000);
+  $("input").placeholder="● "+t().recording+" "+fmtDur(s)+" — toca para enviar"; }
+/* reconocimiento en vivo (best-effort): escribe lo que dices en el campo al instante.
+   No es la transcripción final — esa la hace Groq (más precisa). Si el navegador no
+   lo soporta, simplemente no se muestra y la nota funciona igual. */
+function startLiveRecog(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return;
+  try{
+    const r=new SR();
+    r.lang = S.lang==="en" ? "en-US" : "es-ES";
+    r.interimResults=true; r.continuous=true;
+    r.onresult=e=>{
+      let interim="";
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const txt=e.results[i][0].transcript;
+        if(e.results[i].isFinal) RECO.finalText+=txt+" "; else interim+=txt;
+      }
+      RECO.liveText=(RECO.finalText+interim).replace(/\s+/g," ").trim();
+      if(RECO.active){ inputEl.value=RECO.liveText; autoGrow(); }
+    };
+    r.onerror=()=>{};
+    r.onend=()=>{ if(RECO.active){ try{ r.start(); }catch(e){} } };  // reintenta si se corta
+    r.start();
+    RECO.recog=r;
+  }catch(e){ RECO.recog=null; }
+}
+function stopLiveRecog(){ if(RECO.recog){ try{ RECO.recog.onend=null; RECO.recog.stop(); }catch(e){} RECO.recog=null; } }
 async function startRec(){
+  if(RECO.active || RECO.preparing) return;
   if(!navigator.mediaDevices || !window.MediaRecorder){ addHint(t().micUnsupported); return; }
+  // Feedback inmediato: el botón reacciona al instante aunque el micro tarde en abrir.
+  RECO.preparing=true; setMicUI("prep");
+  RECO.ph=$("input").placeholder; $("input").placeholder=t().micPrep;
   let stream;
-  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
-  catch(e){ addHint(t().micDenied); return; }
-  RECO.stream=stream; RECO.chunks=[]; RECO.active=true; RECO.start=Date.now();
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:{
+        echoCancellation:true, noiseSuppression:true, autoGainControl:true }}); }
+  catch(e){ RECO.preparing=false; setMicUI(""); $("input").placeholder=RECO.ph; addHint(t().micDenied); return; }
+  if(!RECO.preparing){ stream.getTracks().forEach(t=>t.stop()); return; }  // cancelado mientras abría
+  RECO.preparing=false; RECO.stream=stream; RECO.chunks=[]; RECO.active=true;
   const mime=pickMime();
-  try{ RECO.recorder=new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }
-  catch(e){ RECO.recorder=new MediaRecorder(stream); }
+  const opts=mime?{mimeType:mime, audioBitsPerSecond:96000}:undefined;
+  try{ RECO.recorder=new MediaRecorder(stream, opts); }
+  catch(e){ try{ RECO.recorder=new MediaRecorder(stream); }catch(e2){
+    RECO.active=false; stream.getTracks().forEach(t=>t.stop()); setMicUI(""); $("input").placeholder=RECO.ph;
+    addHint(t().micUnsupported); return; } }
   RECO.recorder.ondataavailable=e=>{ if(e.data&&e.data.size) RECO.chunks.push(e.data); };
   RECO.recorder.onstop=finishRec;
-  RECO.recorder.start();
-  setMicUI(true);
-  RECO.timer=setTimeout(()=>{ if(RECO.active) stopRec(); }, 60000);  // máx 60s
+  RECO.recorder.start(200);   // chunks cada 200ms → menos latencia al parar
+  RECO.start=Date.now();      // contar desde que la captura arranca de verdad
+  RECO.finalText=""; RECO.liveText=""; RECO.prevVal=inputEl.value; inputEl.value="";
+  startLiveRecog();           // muestra tus palabras en el campo mientras hablas
+  setMicUI("rec"); showRecTime();
+  RECO.tick=setInterval(showRecTime, 500);
+  RECO.timer=setTimeout(()=>{ if(RECO.active) stopRec(); }, 120000);  // máx 2 min
 }
-function stopRec(){ if(!RECO.active) return; RECO.active=false; clearTimeout(RECO.timer);
-  try{ RECO.recorder.stop(); }catch(e){} setMicUI(false); }
+function stopRec(){
+  if(RECO.preparing){ RECO.preparing=false; setMicUI(""); $("input").placeholder=RECO.ph; return; }
+  if(!RECO.active) return;
+  RECO.active=false; clearTimeout(RECO.timer); clearInterval(RECO.tick);
+  stopLiveRecog();
+  inputEl.value=RECO.prevVal||""; autoGrow();   // quita el dictado en vivo del campo
+  setMicUI(""); $("input").placeholder=RECO.ph;
+  try{ RECO.recorder.requestData(); }catch(e){}
+  try{ RECO.recorder.stop(); }catch(e){}
+}
 function finishRec(){
   const type=(RECO.recorder&&RECO.recorder.mimeType)||"audio/webm";
   const blob=new Blob(RECO.chunks,{type});
   if(RECO.stream) RECO.stream.getTracks().forEach(t=>t.stop());
   const dur=Math.round((Date.now()-RECO.start)/1000);
+  const live=RECO.liveText; RECO.liveText=""; RECO.finalText="";
   if(dur<1 || blob.size<800){ addHint(t().voiceEmpty); return; }   // demasiado corto
-  sendVoice(blob, dur);
+  sendVoice(blob, dur, live);
 }
-$("mic").onclick=()=>{ RECO.active ? stopRec() : startRec(); };
+$("mic").onclick=()=>{ (RECO.active||RECO.preparing) ? stopRec() : startRec(); };
 
 /* ===========================================================================
    DIARIO
@@ -788,14 +853,14 @@ function applyObLang(){
   const x=t();
   $("ob-title").textContent=x.obTitle; $("ob-sub").textContent=x.obSub; $("ob-go").textContent=x.enter;
   $("l-name").firstChild.textContent=x.lName+" "; $("l-trad").textContent=x.lTrad;
-  document.querySelectorAll("#ob-trads .chip span").forEach(sp=> sp.textContent=sp.dataset[S.lang]);
+  document.querySelectorAll("#ob-trads .pill span").forEach(sp=> sp.textContent=sp.dataset[S.lang]);
   $("lng-es").classList.toggle("on",S.lang==="es"); $("lng-en").classList.toggle("on",S.lang==="en");
 }
 $("lng-es").onclick=()=>{ S.lang="es"; applyObLang(); };
 $("lng-en").onclick=()=>{ S.lang="en"; applyObLang(); };
 $("ob-trads").addEventListener("click",e=>{
-  const c=e.target.closest(".chip"); if(!c) return;
-  document.querySelectorAll("#ob-trads .chip").forEach(x=>x.classList.remove("sel"));
+  const c=e.target.closest(".pill"); if(!c) return;
+  document.querySelectorAll("#ob-trads .pill").forEach(x=>x.classList.remove("sel"));
   c.classList.add("sel"); S.tradition=c.dataset.t;
 });
 $("ob-go").onclick=()=>{
