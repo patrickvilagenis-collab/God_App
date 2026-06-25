@@ -33,19 +33,33 @@ receive a compassionate scripture-grounded response in a soothing voice or text,
 about it, look up a passage, and be safely caught if they're in crisis — all without ever
 feeling judged.
 
-## 🌐 Página web pública (probar desde el móvil)
+## 🌐 Dos formas de publicar la app
 
-La carpeta [`web/`](./web) es una **página pública** que funciona desde el teléfono.
-Llama a la IA directamente desde el navegador con tu propia clave de Anthropic, guardada
-solo en tu dispositivo (ideal para un prototipo; en la app real la clave irá en un servidor).
+La app vive en la carpeta [`web/`](./web). Detecta sola dónde está alojada:
 
-**Para publicarla gratis con GitHub Pages (una sola vez):**
-1. En GitHub, entra al repositorio → **Settings** → **Pages**.
-2. En **Source**, elige **GitHub Actions**.
-3. Espera a que termine la acción "Deploy webpage to GitHub Pages" (pestaña **Actions**).
-4. Tu página quedará en: **https://patrickvilagenis-collab.github.io/god_app/**
-5. Ábrela en el móvil, pega tu clave de Anthropic una vez, y listo.
+- **En Vercel** (con backend `api/chat.js`) → **sin clave**: cualquiera entra y conversa.
+- **En GitHub Pages** (solo estático) → cada usuario pega su propia clave (guardada solo
+  en su dispositivo). Útil como respaldo o para pruebas.
 
-> Nota: si la acción no se ejecuta desde esta rama, fusiona la rama a `main` y se publicará.
+### ✅ Opción recomendada — Vercel (sin clave, cualquiera puede acceder)
 
-La versión con servidor (clave oculta en el backend) está en [`app/`](./app) para desarrollo local.
+Guía completa en **[docs/08 — Despliegue en Vercel](./docs/08-deploy-vercel.md)**. Resumen:
+
+1. Entra a **https://vercel.com** e inicia sesión con **GitHub**.
+2. **Add New… → Project** → importa el repositorio **God_App**.
+3. En **Environment Variables** añade:  `ANTHROPIC_API_KEY = sk-ant-...`
+4. **Deploy**. Tu app quedará en algo como `https://god-app.vercel.app` — **lista para
+   cualquiera, sin pedir clave**.
+
+> La clave queda **oculta en el servidor**. El backend construye el carácter del
+> acompañante ahí mismo (no lo manda el navegador), e incluye límites de tamaño y de
+> peticiones por IP. Aun así, define un **límite de gasto** en tu consola de Anthropic.
+
+### GitHub Pages (respaldo, con clave propia)
+
+Ya configurado: cada push a `main` publica `web/` en
+**https://patrickvilagenis-collab.github.io/God_App/** (workflow en
+`.github/workflows/deploy-pages.yml`). Pide la clave de Anthropic una vez por dispositivo.
+
+La versión con servidor para **desarrollo local** está en [`app/`](./app)
+(`python3 app/server.py`).
