@@ -29,7 +29,9 @@ export default async function handler(req, res) {
     text = text.trim().slice(0, 1500); // límite de seguridad/coste; las respuestas son breves
     if (!text) { res.status(400).json({ error: "text empty" }); return; }
 
-    const voice = process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE;
+    const reqVoice = (req.body && typeof req.body.voice === "string") ? req.body.voice.trim() : "";
+    const voice = /^[A-Za-z0-9]{15,40}$/.test(reqVoice) ? reqVoice
+      : (process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE);
     const model = process.env.ELEVENLABS_MODEL || DEFAULT_MODEL;
 
     const r = await fetch(
