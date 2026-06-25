@@ -10,7 +10,7 @@
 //
 // Recibe { text, language } y devuelve audio/mpeg (mp3).
 
-const DEFAULT_VOICE = "EXAVITQu4vr4xnSDxMaL"; // "Sarah" — voz cálida y tranquila
+const DEFAULT_VOICE = "pNInz6obpgDQGcFmaJgB"; // "Adam" — voz masculina grave, firme y con presencia
 const DEFAULT_MODEL = "eleven_multilingual_v2";
 
 export default async function handler(req, res) {
@@ -41,9 +41,9 @@ export default async function handler(req, res) {
           text,
           model_id: model,
           voice_settings: {
-            stability: 0.45,        // entonación natural, no monótona
-            similarity_boost: 0.8,
-            style: 0.25,            // un poco de calidez/expresividad
+            stability: 0.55,        // firme y serena, con autoridad tranquila
+            similarity_boost: 0.85,
+            style: 0.35,            // presencia y calidez, sin sonar plano
             use_speaker_boost: true,
           },
         }),
