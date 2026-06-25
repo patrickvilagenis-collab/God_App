@@ -70,6 +70,7 @@ const T = {
        companion:"Acompañante", hello:n=>`La paz sea contigo${n?", "+n:""}. Estoy aquí, contigo. ¿Qué llevas en el corazón hoy?`,
        ph:"Escribe lo que sientes…", err:"No pude conectar. Revisa tu conexión o tu clave de IA.",
        voiceNote:"Nota de voz", transcribing:"Transcribiendo tu nota…",
+       micPrep:"Preparando micrófono…", recording:"Grabando",
        micDenied:"No pude acceder al micrófono. Revisa los permisos del navegador.",
        micUnsupported:"Tu navegador no permite grabar audio.",
        voiceErrTr:"No pude transcribir la nota. Tu nota se guardó; inténtalo de nuevo.",
@@ -90,6 +91,7 @@ const T = {
        companion:"Companion", hello:n=>`Peace be with you${n?", "+n:""}. I'm here, with you. What's on your heart today?`,
        ph:"Write what you feel…", err:"Couldn't connect. Check your connection or AI key.",
        voiceNote:"Voice note", transcribing:"Transcribing your note…",
+       micPrep:"Getting the mic ready…", recording:"Recording",
        micDenied:"Couldn't access the microphone. Check your browser permissions.",
        micUnsupported:"Your browser can't record audio.",
        voiceErrTr:"Couldn't transcribe the note. It was saved; please try again.",
@@ -361,25 +363,49 @@ async function sendVoice(blob, dur){
 }
 
 /* grabación */
-const RECO={active:false, recorder:null, chunks:[], stream:null, start:0, timer:null};
-function setMicUI(on){ $("mic").classList.toggle("rec",on); $("mic").innerHTML = on ? svgUse("ic-stop") : svgUse("ic-mic"); }
+const RECO={active:false, preparing:false, recorder:null, chunks:[], stream:null, start:0, timer:null, tick:null, ph:""};
+function setMicUI(state){  // state: "" | "prep" | "rec"
+  const m=$("mic");
+  m.classList.toggle("rec", state==="rec");
+  m.classList.toggle("prep", state==="prep");
+  m.innerHTML = state==="rec" ? svgUse("ic-stop") : svgUse("ic-mic");
+}
+function showRecTime(){ const s=Math.round((Date.now()-RECO.start)/1000);
+  $("input").placeholder="● "+t().recording+" "+fmtDur(s)+" — toca para enviar"; }
 async function startRec(){
+  if(RECO.active || RECO.preparing) return;
   if(!navigator.mediaDevices || !window.MediaRecorder){ addHint(t().micUnsupported); return; }
+  // Feedback inmediato: el botón reacciona al instante aunque el micro tarde en abrir.
+  RECO.preparing=true; setMicUI("prep");
+  RECO.ph=$("input").placeholder; $("input").placeholder=t().micPrep;
   let stream;
-  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
-  catch(e){ addHint(t().micDenied); return; }
-  RECO.stream=stream; RECO.chunks=[]; RECO.active=true; RECO.start=Date.now();
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:{
+        echoCancellation:true, noiseSuppression:true, autoGainControl:true }}); }
+  catch(e){ RECO.preparing=false; setMicUI(""); $("input").placeholder=RECO.ph; addHint(t().micDenied); return; }
+  if(!RECO.preparing){ stream.getTracks().forEach(t=>t.stop()); return; }  // cancelado mientras abría
+  RECO.preparing=false; RECO.stream=stream; RECO.chunks=[]; RECO.active=true;
   const mime=pickMime();
-  try{ RECO.recorder=new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }
-  catch(e){ RECO.recorder=new MediaRecorder(stream); }
+  const opts=mime?{mimeType:mime, audioBitsPerSecond:96000}:undefined;
+  try{ RECO.recorder=new MediaRecorder(stream, opts); }
+  catch(e){ try{ RECO.recorder=new MediaRecorder(stream); }catch(e2){
+    RECO.active=false; stream.getTracks().forEach(t=>t.stop()); setMicUI(""); $("input").placeholder=RECO.ph;
+    addHint(t().micUnsupported); return; } }
   RECO.recorder.ondataavailable=e=>{ if(e.data&&e.data.size) RECO.chunks.push(e.data); };
   RECO.recorder.onstop=finishRec;
-  RECO.recorder.start();
-  setMicUI(true);
-  RECO.timer=setTimeout(()=>{ if(RECO.active) stopRec(); }, 60000);  // máx 60s
+  RECO.recorder.start(200);   // chunks cada 200ms → menos latencia al parar
+  RECO.start=Date.now();      // contar desde que la captura arranca de verdad
+  setMicUI("rec"); showRecTime();
+  RECO.tick=setInterval(showRecTime, 500);
+  RECO.timer=setTimeout(()=>{ if(RECO.active) stopRec(); }, 120000);  // máx 2 min
 }
-function stopRec(){ if(!RECO.active) return; RECO.active=false; clearTimeout(RECO.timer);
-  try{ RECO.recorder.stop(); }catch(e){} setMicUI(false); }
+function stopRec(){
+  if(RECO.preparing){ RECO.preparing=false; setMicUI(""); $("input").placeholder=RECO.ph; return; }
+  if(!RECO.active) return;
+  RECO.active=false; clearTimeout(RECO.timer); clearInterval(RECO.tick);
+  setMicUI(""); $("input").placeholder=RECO.ph;
+  try{ RECO.recorder.requestData(); }catch(e){}
+  try{ RECO.recorder.stop(); }catch(e){}
+}
 function finishRec(){
   const type=(RECO.recorder&&RECO.recorder.mimeType)||"audio/webm";
   const blob=new Blob(RECO.chunks,{type});
@@ -388,7 +414,7 @@ function finishRec(){
   if(dur<1 || blob.size<800){ addHint(t().voiceEmpty); return; }   // demasiado corto
   sendVoice(blob, dur);
 }
-$("mic").onclick=()=>{ RECO.active ? stopRec() : startRec(); };
+$("mic").onclick=()=>{ (RECO.active||RECO.preparing) ? stopRec() : startRec(); };
 
 /* ===========================================================================
    DIARIO

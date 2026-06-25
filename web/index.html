@@ -262,8 +262,10 @@ input::placeholder,textarea::placeholder{color:var(--faint);}
 .vtext.pending{opacity:.6;font-style:italic;}
 .hint{align-self:center;max-width:92%;text-align:center;color:var(--muted);font-size:.82rem;
   background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 15px;line-height:1.45;}
+#mic.prep{color:var(--gold2);animation:micprep 1s infinite;}
 #mic.rec{background:#bb443e;border-color:#bb443e;color:#fff;animation:micpulse 1.3s infinite;}
 @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(187,68,62,.45);}50%{box-shadow:0 0 0 8px rgba(187,68,62,0);}}
+@keyframes micprep{0%,100%{opacity:.5;}50%{opacity:1;}}
 
 @media(min-width:560px){ .view .scroll, #msgs{padding-left:max(22px,calc((100% - 600px)/2));padding-right:max(22px,calc((100% - 600px)/2));} }
 </style>
