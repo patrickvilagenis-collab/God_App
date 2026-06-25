@@ -167,11 +167,49 @@ async function askAI(messages, mode){
 }
 
 /* ---------- voz ---------- */
+/* ---------- selección de la MEJOR voz del dispositivo ---------- */
+let _voices = [], _voicePick = {};
+function loadVoices(){
+  if(!window.speechSynthesis) return;
+  _voices = speechSynthesis.getVoices() || [];
+  _voicePick = {};                       // recalcular tras cargar
+}
+if(window.speechSynthesis){
+  loadVoices();
+  try{ speechSynthesis.onvoiceschanged = loadVoices; }catch{}
+}
+function pickVoice(lang){
+  if(_voicePick[lang]) return _voicePick[lang];
+  if(!_voices.length) loadVoices();
+  const base = lang==="es" ? "es" : "en";
+  const pool = _voices.filter(v=> (v.lang||"").toLowerCase().startsWith(base));
+  if(!pool.length) return null;
+  const order = lang==="es" ? ["es-es","es-us","es-mx","es-419"] : ["en-us","en-gb","en-au"];
+  const rank = v=>{
+    const n=(v.name||"").toLowerCase(), l=(v.lang||"").toLowerCase(); let s=0;
+    if(/neural|premium|enhanced|natural|siri/.test(n)) s+=60;   // voces de alta calidad
+    if(/google/.test(n)) s+=35;                                  // Google suele ser muy natural
+    if(/microsoft/.test(n)) s+=18;
+    if(v.localService===false) s+=10;                            // las remotas suelen sonar mejor
+    // nombres conocidos de buena calidad
+    if(/mónica|monica|paulina|marisol|jorge|juan|elvira|dalia|helena|laura|sabina/.test(n)) s+=14;
+    if(/samantha|ava|allison|aria|jenny|nova|serena|libby/.test(n)) s+=14;
+    const idx = order.indexOf(l); if(idx>=0) s += (order.length-idx)*3;  // preferir locale más natural
+    return s;
+  };
+  pool.sort((a,b)=> rank(b)-rank(a));
+  _voicePick[lang]=pool[0];
+  return pool[0];
+}
 function speak(text){
   if(!S.voice || !window.speechSynthesis) return;
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = S.lang==="es"?"es-ES":"en-US"; u.rate=.93;
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
+  u.lang = S.lang==="es"?"es-ES":"en-US";
+  const v = pickVoice(S.lang); if(v) u.voice=v;
+  u.rate=.96; u.pitch=1.02;               // ritmo sereno, tono cálido
+  speechSynthesis.cancel();
+  // Safari/iOS a veces ignora la voz si no hay un respiro tras cancel()
+  setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch{} }, 60);
 }
 function stopVoice(){ if(window.speechSynthesis) speechSynthesis.cancel(); }
 
