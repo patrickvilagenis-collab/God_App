@@ -43,6 +43,23 @@ Es gratis para empezar (plan Hobby de Vercel). Solo pagas el uso de la API de An
 
 ---
 
+## Notas de voz (transcripción) — variable extra
+
+Para que el acompañante **entienda las notas de voz en todos los móviles** (iPhone
+incluido), añade una segunda variable de entorno con una clave **gratuita de Groq**:
+
+1. Crea una clave en **<https://console.groq.com/keys>** (gratis; registro con Google/GitHub).
+2. En Vercel → **god-app → Settings → Environment Variables**, añade:
+   - **Name:** `GROQ_API_KEY`
+   - **Value:** `gsk_...`
+   - Marca los tres entornos → **Save**.
+3. **Deployments → ⋯ → Redeploy** para que tome la variable.
+
+Sin esta clave, las notas de voz **se graban y se reproducen igualmente**, pero el
+acompañante no podrá transcribirlas. Con ella, funciona la voz completa.
+
+---
+
 ## Control de costes y abuso (recomendado)
 
 Como la app es pública, cualquiera que tenga la URL puede generar consumo de API.

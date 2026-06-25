@@ -69,6 +69,12 @@ const T = {
        noConvo:"Aún no hay conversaciones. Cuando lo desees, aquí estaré.",
        companion:"Acompañante", hello:n=>`La paz sea contigo${n?", "+n:""}. Estoy aquí, contigo. ¿Qué llevas en el corazón hoy?`,
        ph:"Escribe lo que sientes…", err:"No pude conectar. Revisa tu conexión o tu clave de IA.",
+       voiceNote:"Nota de voz", transcribing:"Transcribiendo tu nota…",
+       micDenied:"No pude acceder al micrófono. Revisa los permisos del navegador.",
+       micUnsupported:"Tu navegador no permite grabar audio.",
+       voiceErrTr:"No pude transcribir la nota. Tu nota se guardó; inténtalo de nuevo.",
+       voiceEmpty:"No se entendió la nota de voz. ¿La repites un poco más claro?",
+       voiceNoServer:"Tu nota se guardó. Para que el acompañante entienda la voz, usa la versión publicada (Vercel).",
        jH:"Mi diario", jSub:"Un espacio para tus pensamientos", jEmpty:"Tu diario está en blanco.\nPulsa ＋ para escribir tu primera entrada.",
        reflect:"Pedir una reflexión", reflecting:"Reflexionando…", reflTitle:"Reflexión de tu compañero",
        newTitle:"Nueva entrada", jPh:"Escribe lo que sientes, lo que agradeces, lo que te preocupa…", saveJ:"Guardar",
@@ -83,6 +89,12 @@ const T = {
        noConvo:"No conversations yet. Whenever you're ready, I'll be here.",
        companion:"Companion", hello:n=>`Peace be with you${n?", "+n:""}. I'm here, with you. What's on your heart today?`,
        ph:"Write what you feel…", err:"Couldn't connect. Check your connection or AI key.",
+       voiceNote:"Voice note", transcribing:"Transcribing your note…",
+       micDenied:"Couldn't access the microphone. Check your browser permissions.",
+       micUnsupported:"Your browser can't record audio.",
+       voiceErrTr:"Couldn't transcribe the note. It was saved; please try again.",
+       voiceEmpty:"I couldn't make out the voice note. Could you say it a bit more clearly?",
+       voiceNoServer:"Your note was saved. For the companion to understand voice, use the published (Vercel) version.",
        jH:"My journal", jSub:"A space for your thoughts", jEmpty:"Your journal is empty.\nTap ＋ to write your first entry.",
        reflect:"Ask for a reflection", reflecting:"Reflecting…", reflTitle:"A reflection from your companion",
        newTitle:"New entry", jPh:"Write what you feel, what you're grateful for, what worries you…", saveJ:"Save",
@@ -130,6 +142,8 @@ function reflectionSuffixLocal(){
     : "\n\nThe person shares a journal entry. Respond with a brief, warm, personal reflection (3-5 sentences), grounded in their tradition, helping them process what they wrote. Do not judge them.";
 }
 async function askAI(messages, mode){
+  const clean = messages.map(m=>({role:m.role, content:m.content})); // sin campos extra (p. ej. voice)
+  messages = clean;
   if(HAS_BACKEND){
     // El servidor construye el carácter del acompañante (clave protegida).
     const r = await fetch("/api/chat",{method:"POST",headers:{"content-type":"application/json"},
@@ -231,7 +245,9 @@ function openChat(id){
   $("input").placeholder=t().ph;
   const box=$("msgs"); box.innerHTML="";
   if(!c.messages.length){ addBubble("them", t().hello(S.name), false); }
-  else c.messages.forEach(m=> addBubble(m.role==="user"?"me":"them", m.content, false));
+  else c.messages.forEach(m=>{ const who=m.role==="user"?"me":"them";
+    if(m.voice) addVoiceBubble(who, m.voice.id, m.voice.dur, m.voice.transcript||"", false);
+    else addBubble(who, m.content, false); });
   box.scrollTop=1e9;
 }
 function addBubble(who,text,scroll=true){
@@ -266,12 +282,113 @@ inputEl.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preve
 $("send").onclick=sendMsg;
 $("voice-btn").onclick=()=>{ S.voice=!S.voice; save(); $("voice-btn").classList.toggle("on",S.voice); if(!S.voice)stopVoice(); };
 
-/* dictado por voz */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(SR){ $("mic").onclick=()=>{ const r=new SR(); r.lang=S.lang==="es"?"es-ES":"en-US"; r.interimResults=false;
-  $("mic").classList.add("on"); r.onresult=e=>{inputEl.value+=e.results[0][0].transcript;autoGrow();};
-  r.onend=()=>$("mic").classList.remove("on"); r.start(); }; }
-else $("mic").style.display="none";
+/* ===========================================================================
+   NOTAS DE VOZ — grabar (MediaRecorder) + guardar (IndexedDB) + transcribir
+   =========================================================================== */
+let _db;
+function idb(){ return new Promise((res,rej)=>{ if(_db) return res(_db);
+  const r=indexedDB.open("alma",1);
+  r.onupgradeneeded=()=>{ if(!r.result.objectStoreNames.contains("audio")) r.result.createObjectStore("audio"); };
+  r.onsuccess=()=>{ _db=r.result; res(_db); }; r.onerror=()=>rej(r.error); }); }
+async function idbPut(id,blob){ const db=await idb(); return new Promise((res,rej)=>{
+  const tx=db.transaction("audio","readwrite"); tx.objectStore("audio").put(blob,id);
+  tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+async function idbGet(id){ const db=await idb(); return new Promise((res,rej)=>{
+  const tx=db.transaction("audio","readonly"); const rq=tx.objectStore("audio").get(id);
+  rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error); }); }
+async function idbClear(){ try{ const db=await idb(); db.transaction("audio","readwrite").objectStore("audio").clear(); }catch(e){} }
+
+const fmtDur=s=>`${Math.floor(s/60)}:${String(Math.max(0,s)%60).padStart(2,"0")}`;
+function pickMime(){ const c=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/mpeg","audio/ogg"];
+  return (window.MediaRecorder ? c.find(m=>MediaRecorder.isTypeSupported(m)) : "") || ""; }
+function svgUse(id){ return `<svg class="svg"><use href="#${id}"/></svg>`; }
+function addHint(text){ const h=el("div","hint"); h.textContent=text; $("msgs").appendChild(h); $("msgs").scrollTop=1e9; return h; }
+
+function addVoiceBubble(who, id, dur, transcript, scroll=true){
+  const b=el("div","bubble "+who+" voicebub");
+  const pl=el("div","vplayer");
+  const btn=el("button","vbtn"); btn.innerHTML=svgUse("ic-play");
+  const line=el("div","vline"); const time=el("span","vdur"); time.textContent=fmtDur(dur||0);
+  pl.appendChild(btn); pl.appendChild(line); pl.appendChild(time); b.appendChild(pl);
+  const tx=el("div","vtext"); b.appendChild(tx); b._tx=tx;
+  if(transcript){ tx.textContent=transcript; } else { tx.style.display="none"; }
+  let audio=null;
+  btn.onclick=async()=>{
+    try{
+      if(!audio){ const blob=await idbGet(id); if(!blob) return;
+        audio=new Audio(URL.createObjectURL(blob)); audio.onended=()=>btn.innerHTML=svgUse("ic-play"); }
+      if(audio.paused){ audio.play(); btn.innerHTML=svgUse("ic-pause"); }
+      else { audio.pause(); btn.innerHTML=svgUse("ic-play"); }
+    }catch(e){ console.error(e); }
+  };
+  $("msgs").appendChild(b); if(scroll) $("msgs").scrollTop=1e9; return b;
+}
+
+function blobToB64(blob){ return new Promise((res,rej)=>{ const fr=new FileReader();
+  fr.onload=()=>res(String(fr.result).split(",")[1]); fr.onerror=()=>rej(fr.error); fr.readAsDataURL(blob); }); }
+async function transcribe(blob){
+  const b64=await blobToB64(blob);
+  const r=await fetch("/api/transcribe",{method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({audio:b64, mime:blob.type||"audio/webm", language:S.lang})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error||("transcribe "+r.status));
+  return (d.text||"").trim();
+}
+
+async function sendVoice(blob, dur){
+  const c=getConvo(activeConvo)||(newChat(),getConvo(activeConvo));
+  const id="v"+Date.now();
+  try{ await idbPut(id,blob); }catch(e){ console.error(e); }
+  const msg={role:"user", content:"["+t().voiceNote+"]", voice:{id,dur,transcript:""}};
+  c.messages.push(msg); c.updated=Date.now();
+  if(!c.title) c.title=t().voiceNote;
+  save();
+  const bubble=addVoiceBubble("me", id, dur, "");
+  if(!HAS_BACKEND){ addHint(t().voiceNoServer); return; }   // GitHub Pages: sin transcripción
+  bubble._tx.style.display="block"; bubble._tx.className="vtext pending"; bubble._tx.textContent=t().transcribing;
+  const typing=el("div","typing"); typing.innerHTML="<i></i><i></i><i></i>";
+  $("msgs").appendChild(typing); $("msgs").scrollTop=1e9; $("send").disabled=true;
+  try{
+    const text=await transcribe(blob);
+    if(!text){ typing.remove(); bubble._tx.style.display="none"; addHint(t().voiceEmpty); save(); return; }
+    msg.voice.transcript=text; msg.content=text; c.title=text.slice(0,32); save();
+    bubble._tx.className="vtext"; bubble._tx.textContent=text;
+    const reply=await askAI(c.messages);
+    typing.remove(); addBubble("them",reply);
+    c.messages.push({role:"assistant",content:reply}); c.updated=Date.now(); save(); speak(reply);
+  }catch(e){ typing.remove(); bubble._tx.style.display="none"; addHint(t().voiceErrTr); console.error(e); }
+  finally{ $("send").disabled=false; }
+}
+
+/* grabación */
+const RECO={active:false, recorder:null, chunks:[], stream:null, start:0, timer:null};
+function setMicUI(on){ $("mic").classList.toggle("rec",on); $("mic").innerHTML = on ? svgUse("ic-stop") : svgUse("ic-mic"); }
+async function startRec(){
+  if(!navigator.mediaDevices || !window.MediaRecorder){ addHint(t().micUnsupported); return; }
+  let stream;
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){ addHint(t().micDenied); return; }
+  RECO.stream=stream; RECO.chunks=[]; RECO.active=true; RECO.start=Date.now();
+  const mime=pickMime();
+  try{ RECO.recorder=new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }
+  catch(e){ RECO.recorder=new MediaRecorder(stream); }
+  RECO.recorder.ondataavailable=e=>{ if(e.data&&e.data.size) RECO.chunks.push(e.data); };
+  RECO.recorder.onstop=finishRec;
+  RECO.recorder.start();
+  setMicUI(true);
+  RECO.timer=setTimeout(()=>{ if(RECO.active) stopRec(); }, 60000);  // máx 60s
+}
+function stopRec(){ if(!RECO.active) return; RECO.active=false; clearTimeout(RECO.timer);
+  try{ RECO.recorder.stop(); }catch(e){} setMicUI(false); }
+function finishRec(){
+  const type=(RECO.recorder&&RECO.recorder.mimeType)||"audio/webm";
+  const blob=new Blob(RECO.chunks,{type});
+  if(RECO.stream) RECO.stream.getTracks().forEach(t=>t.stop());
+  const dur=Math.round((Date.now()-RECO.start)/1000);
+  if(dur<1 || blob.size<800){ addHint(t().voiceEmpty); return; }   // demasiado corto
+  sendVoice(blob, dur);
+}
+$("mic").onclick=()=>{ RECO.active ? stopRec() : startRec(); };
 
 /* ===========================================================================
    DIARIO
@@ -344,7 +461,7 @@ $("s-von").onclick=()=>{ S.voice=true; save(); renderSettings(); };
 $("s-voff").onclick=()=>{ S.voice=false; save(); stopVoice(); renderSettings(); };
 $("s-key-btn").onclick=()=> showKey();
 $("s-clear").onclick=()=>{ if(confirm(t().clearAsk)){ ["name","tradition","lang","voice","key","convos","journal"].forEach(store.del);
-  location.reload(); } };
+  idbClear(); location.reload(); } };
 
 /* ===========================================================================
    BIBLIOTECA — repositorio de textos sagrados
