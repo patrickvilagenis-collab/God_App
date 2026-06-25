@@ -201,8 +201,8 @@ function pickVoice(lang){
   _voicePick[lang]=pool[0];
   return pool[0];
 }
-function speak(text){
-  if(!S.voice || !window.speechSynthesis) return;
+function speakBrowser(text){               // respaldo: voz del propio dispositivo
+  if(!window.speechSynthesis) return;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = S.lang==="es"?"es-ES":"en-US";
   const v = pickVoice(S.lang); if(v) u.voice=v;
@@ -211,7 +211,51 @@ function speak(text){
   // Safari/iOS a veces ignora la voz si no hay un respiro tras cancel()
   setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch{} }, 60);
 }
-function stopVoice(){ if(window.speechSynthesis) speechSynthesis.cancel(); }
+
+/* ---------- desbloqueo de audio (iOS/Android bloquean reproducción sin gesto) ---------- */
+let _audioUnlocked = false;
+function unlockAudio(){
+  if(_audioUnlocked) return;
+  _audioUnlocked = true;
+  try{
+    const a = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTRUoAWgBgkOAQBMAZwBgQ");
+    a.volume = 0; a.play().then(()=>{ a.pause(); }).catch(()=>{});
+  }catch{}
+}
+document.addEventListener("pointerdown", unlockAudio, {once:true});
+document.addEventListener("click", unlockAudio, {once:true});
+
+let _ttsAudio = null;
+async function speak(text){
+  if(!S.voice || !text) return;
+  stopVoice();
+  if(HAS_BACKEND){
+    try{
+      const r = await fetch("/api/tts", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ text, language: S.lang }),
+      });
+      if(r.ok){
+        const blob = await r.blob();
+        if(blob && blob.size > 400){
+          const url = URL.createObjectURL(blob);
+          const a = new Audio(url);
+          _ttsAudio = a;
+          const cleanup = ()=>{ URL.revokeObjectURL(url); if(_ttsAudio===a) _ttsAudio=null; };
+          a.onended = cleanup; a.onerror = cleanup;
+          await a.play().catch(()=>{ cleanup(); speakBrowser(text); });
+          return;
+        }
+      }
+    }catch(e){ /* sin red o sin clave → respaldo */ }
+  }
+  speakBrowser(text);                       // respaldo si el servidor no responde
+}
+function stopVoice(){
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  if(_ttsAudio){ try{ _ttsAudio.pause(); }catch{} _ttsAudio=null; }
+}
 
 /* ===========================================================================
    NAVEGACIÓN
