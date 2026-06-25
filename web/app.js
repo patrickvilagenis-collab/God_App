@@ -853,14 +853,14 @@ function applyObLang(){
   const x=t();
   $("ob-title").textContent=x.obTitle; $("ob-sub").textContent=x.obSub; $("ob-go").textContent=x.enter;
   $("l-name").firstChild.textContent=x.lName+" "; $("l-trad").textContent=x.lTrad;
-  document.querySelectorAll("#ob-trads .chip span").forEach(sp=> sp.textContent=sp.dataset[S.lang]);
+  document.querySelectorAll("#ob-trads .pill span").forEach(sp=> sp.textContent=sp.dataset[S.lang]);
   $("lng-es").classList.toggle("on",S.lang==="es"); $("lng-en").classList.toggle("on",S.lang==="en");
 }
 $("lng-es").onclick=()=>{ S.lang="es"; applyObLang(); };
 $("lng-en").onclick=()=>{ S.lang="en"; applyObLang(); };
 $("ob-trads").addEventListener("click",e=>{
-  const c=e.target.closest(".chip"); if(!c) return;
-  document.querySelectorAll("#ob-trads .chip").forEach(x=>x.classList.remove("sel"));
+  const c=e.target.closest(".pill"); if(!c) return;
+  document.querySelectorAll("#ob-trads .pill").forEach(x=>x.classList.remove("sel"));
   c.classList.add("sel"); S.tradition=c.dataset.t;
 });
 $("ob-go").onclick=()=>{

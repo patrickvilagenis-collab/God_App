@@ -47,8 +47,22 @@ h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:.01em;margin:0;
 
 /* ---------- pantallas centradas ---------- */
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow-y:auto;background:var(--paper);
-  animation:fade .4s ease;}
+  animation:fade .7s ease;}
 @keyframes fade{from{opacity:0;}to{opacity:1;}}
+
+/* entrada serena y escalonada del onboarding */
+#onboard{animation:fade 1.1s ease both;}
+#onboard .pad>*{animation:soft 1.1s cubic-bezier(.22,.61,.36,1) both;}
+#onboard .mark{animation-delay:.10s;}
+#onboard .brand{animation-delay:.24s;}
+#onboard .disp{animation-delay:.40s;}
+#onboard .lede{animation-delay:.58s;}
+#onboard .card{animation-delay:.78s;}
+#onboard .fineprint{animation-delay:.98s;}
+@keyframes soft{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:reduce){
+  #onboard,#onboard .pad>*{animation:fade .5s ease both;}
+}
 .pad{padding:max(40px,env(safe-area-inset-top)) 26px 40px;margin:auto;width:min(460px,100%);}
 .disp{font-family:var(--serif);font-size:2.5rem;line-height:1.08;text-align:center;margin:.34em 0 .2em;
   font-weight:600;letter-spacing:.005em;}
