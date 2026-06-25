@@ -100,10 +100,11 @@ export default async function handler(req, res) {
     let system = systemPrompt(tradition, language, name);
     if (mode === "reflection") system += reflectionSuffix(language);
 
+    const clean = messages.map(m => ({ role: m.role, content: m.content }));
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1024, system, messages }),
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1024, system, messages: clean }),
     });
     const data = await r.json();
     if (!r.ok) { res.status(r.status).json({ error: data?.error?.message || "AI error" }); return; }
