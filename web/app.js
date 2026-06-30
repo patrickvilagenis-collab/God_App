@@ -233,8 +233,8 @@ function unlockAudio(){
 document.addEventListener("pointerdown", unlockAudio);   // reintenta en cada toque hasta lograrlo
 document.addEventListener("click", unlockAudio);
 
-async function speak(text){
-  if(!S.voice || !text) return;
+async function speak(text, force=false){
+  if((!S.voice && !force) || !text) return;   // force=true → reproducir a demanda (botón)
   stopVoice();
   if(HAS_BACKEND){
     try{
@@ -344,6 +344,12 @@ function openChat(id){
 }
 function addBubble(who,text,scroll=true){
   const b=el("div","bubble "+who); b.textContent=text;
+  if(who==="them" && HAS_BACKEND){          // botón para volver a escuchar la respuesta
+    const rb=el("button","replaybtn"); rb.innerHTML=svgUse("ic-voice");
+    rb.title = S.lang==="es" ? "Escuchar" : "Listen";
+    rb.onclick=()=>speak(text, true);
+    b.appendChild(rb);
+  }
   $("msgs").appendChild(b); if(scroll)$("msgs").scrollTop=1e9; return b;
 }
 async function sendMsg(){
