@@ -1,36 +1,20 @@
-// TEMPORAL — busca voces masculinas MAYORES en castellano (España).
+// TEMPORAL — añade la voz elegida (Rafael) a la cuenta y devuelve su voice_id usable.
 export default async function handler(req, res) {
   const key = process.env.ELEVENLABS_API_KEY;
   if (!key) { res.status(500).json({ error: "no key" }); return; }
-  const headers = { "xi-api-key": key };
-  const queries = [
-    "gender=male&language=es&age=old&page_size=60",
-    "gender=male&language=es&age=middle_aged&page_size=60",
-  ];
-  const seen = {}, all = [];
+  const PUBLIC_OWNER = "ec53e0f9bc0b2d72ff4c9d4d62e2c25b9ce81dd49f1d6c4f3a0b1f0e9a"; // placeholder, se ignora
+  // Datos reales de Rafael (peninsular, mayor):
+  const voiceId = "orF2qy9215xjwqqxqsWW";
+  const ownerId = req.query.owner; // se pasa por query para no hardcodear mal
+  const name = "Rafael Alma";
   try {
-    for (const q of queries) {
-      const r = await fetch("https://api.elevenlabs.io/v1/shared-voices?" + q, { headers });
-      const d = await r.json();
-      if (!r.ok) { res.status(r.status).json({ error: d }); return; }
-      for (const v of (d.voices || [])) {
-        if (seen[v.voice_id]) continue;
-        seen[v.voice_id] = 1;
-        all.push({
-          id: v.voice_id, owner: v.public_owner_id, name: v.name,
-          accent: v.accent, descriptive: v.descriptive, age: v.age,
-          use_case: v.use_case, locale: v.locale, preview: v.preview_url,
-          cloned: v.cloned_by_count,
-        });
-      }
-    }
-    // solo acento de España (peninsular/castellano)
-    const spain = all.filter(v => {
-      const a = (v.accent || "").toLowerCase();
-      const l = (v.locale || "").toLowerCase();
-      return a.includes("peninsular") || a.includes("castil") || a.includes("spain") || a === "spanish" || l.startsWith("es-es");
+    const r = await fetch(`https://api.elevenlabs.io/v1/voices/add/${ownerId}/${voiceId}`, {
+      method: "POST",
+      headers: { "xi-api-key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({ new_name: name }),
     });
-    res.status(200).json({ total: all.length, spainCount: spain.length, spain });
+    const d = await r.json();
+    res.status(r.status).json(d);
   } catch (e) {
     res.status(500).json({ error: String(e) });
   }
