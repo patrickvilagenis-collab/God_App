@@ -391,7 +391,7 @@ async function idbGet(id){ const db=await idb(); return new Promise((res,rej)=>{
   rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error); }); }
 async function idbClear(){ try{ const db=await idb(); db.transaction("audio","readwrite").objectStore("audio").clear(); }catch(e){} }
 
-const fmtDur=s=>`${Math.floor(s/60)}:${String(Math.max(0,s)%60).padStart(2,"0")}`;
+const fmtDur=s=>{ s=Math.max(0,Math.floor(s||0)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`; };
 function pickMime(){ const c=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/mpeg","audio/ogg"];
   return (window.MediaRecorder ? c.find(m=>MediaRecorder.isTypeSupported(m)) : "") || ""; }
 function svgUse(id){ return `<svg class="svg"><use href="#${id}"/></svg>`; }
