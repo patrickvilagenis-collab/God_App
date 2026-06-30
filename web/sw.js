@@ -1,6 +1,6 @@
 /* Service worker: cachea el "shell" para que Alma abra rápido y offline.
    Las respuestas de la IA siempre van a la red (nunca se cachean). */
-const CACHE = "alma-v8";
+const CACHE = "alma-v9";
 const SHELL = ["./", "index.html", "app.js", "manifest.webmanifest", "icon.png", "icon-192.png"];
 
 self.addEventListener("install", e => {
@@ -14,11 +14,13 @@ self.addEventListener("fetch", e => {
   // nunca cachear llamadas a la IA
   if (url.pathname.includes("/api/") || url.hostname.includes("anthropic.com")) return;
   if (e.request.method !== "GET") return;
+  // RED PRIMERO: siempre intentamos la versión más reciente; la caché es solo
+  // respaldo cuando no hay conexión. Así las actualizaciones se ven al instante.
   e.respondWith(
-    caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
+    fetch(e.request).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
       return res;
-    }).catch(() => caches.match("index.html")))
+    }).catch(() => caches.match(e.request).then(hit => hit || caches.match("index.html")))
   );
 });

@@ -212,20 +212,27 @@ function speakBrowser(text){               // respaldo: voz del propio dispositi
   setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch{} }, 60);
 }
 
-/* ---------- desbloqueo de audio (iOS/Android bloquean reproducción sin gesto) ---------- */
-let _audioUnlocked = false;
+/* ---------- desbloqueo de audio (iOS/Android bloquean reproducción sin gesto) ----------
+   Reutilizamos UN solo reproductor: una vez desbloqueado por un toque, podemos
+   reproducir la voz neuronal aunque llegue tras una petición de red. */
+let _player = null, _audioUnlocked = false, _curUrl = null;
+function ensurePlayer(){
+  if(!_player){ _player = new Audio(); _player.preload = "auto"; }
+  return _player;
+}
 function unlockAudio(){
   if(_audioUnlocked) return;
-  _audioUnlocked = true;
+  const a = ensurePlayer();
   try{
-    const a = new Audio("data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTRUoAWgBgkOAQBMAZwBgQ");
-    a.volume = 0; a.play().then(()=>{ a.pause(); }).catch(()=>{});
+    a.src = "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTRUoAWgBgkOAQBMAZwBgQ";
+    const p = a.play();
+    if(p && p.then) p.then(()=>{ a.pause(); try{a.currentTime=0;}catch{} _audioUnlocked=true; }).catch(()=>{});
+    else _audioUnlocked = true;
   }catch{}
 }
-document.addEventListener("pointerdown", unlockAudio, {once:true});
-document.addEventListener("click", unlockAudio, {once:true});
+document.addEventListener("pointerdown", unlockAudio);   // reintenta en cada toque hasta lograrlo
+document.addEventListener("click", unlockAudio);
 
-let _ttsAudio = null;
 async function speak(text){
   if(!S.voice || !text) return;
   stopVoice();
@@ -240,21 +247,22 @@ async function speak(text){
         const blob = await r.blob();
         if(blob && blob.size > 400){
           const url = URL.createObjectURL(blob);
-          const a = new Audio(url);
-          _ttsAudio = a;
-          const cleanup = ()=>{ URL.revokeObjectURL(url); if(_ttsAudio===a) _ttsAudio=null; };
-          a.onended = cleanup; a.onerror = cleanup;
-          await a.play().catch(()=>{ cleanup(); speakBrowser(text); });
-          return;
+          const a = ensurePlayer();              // mismo elemento ya desbloqueado
+          if(_curUrl){ try{ URL.revokeObjectURL(_curUrl); }catch{} }
+          _curUrl = url;
+          a.onended = ()=>{ if(_curUrl===url){ URL.revokeObjectURL(url); _curUrl=null; } };
+          a.src = url;
+          try{ await a.play(); return; }         // ¡voz neuronal de Rafael!
+          catch(e){ speakBrowser(text); return; } // bloqueado: respaldo solo entonces
         }
       }
     }catch(e){ /* sin red o sin clave → respaldo */ }
   }
-  speakBrowser(text);                       // respaldo si el servidor no responde
+  speakBrowser(text);                            // respaldo si el servidor no responde
 }
 function stopVoice(){
   if(window.speechSynthesis) speechSynthesis.cancel();
-  if(_ttsAudio){ try{ _ttsAudio.pause(); }catch{} _ttsAudio=null; }
+  if(_player){ try{ _player.pause(); }catch{} }
 }
 
 /* ===========================================================================
