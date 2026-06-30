@@ -70,7 +70,7 @@ const T = {
        companion:"Acompañante", hello:n=>`La paz sea contigo${n?", "+n:""}. Estoy aquí, contigo. ¿Qué llevas en el corazón hoy?`,
        ph:"Escribe lo que sientes…", err:"No pude conectar. Revisa tu conexión o tu clave de IA.",
        voiceNote:"Nota de voz", transcribing:"Transcribiendo tu nota…",
-       micPrep:"Preparando micrófono…", recording:"Grabando",
+       micPrep:"Preparando micrófono…", recording:"Grabando", listening:"Escuchando", recHint:"el texto aparecerá al terminar",
        micDenied:"No pude acceder al micrófono. Revisa los permisos del navegador.",
        micUnsupported:"Tu navegador no permite grabar audio.",
        voiceErrTr:"No pude transcribir la nota. Tu nota se guardó; inténtalo de nuevo.",
@@ -91,7 +91,7 @@ const T = {
        companion:"Companion", hello:n=>`Peace be with you${n?", "+n:""}. I'm here, with you. What's on your heart today?`,
        ph:"Write what you feel…", err:"Couldn't connect. Check your connection or AI key.",
        voiceNote:"Voice note", transcribing:"Transcribing your note…",
-       micPrep:"Getting the mic ready…", recording:"Recording",
+       micPrep:"Getting the mic ready…", recording:"Recording", listening:"Listening", recHint:"the text will appear when you finish",
        micDenied:"Couldn't access the microphone. Check your browser permissions.",
        micUnsupported:"Your browser can't record audio.",
        voiceErrTr:"Couldn't transcribe the note. It was saved; please try again.",
@@ -397,23 +397,57 @@ function pickMime(){ const c=["audio/webm;codecs=opus","audio/webm","audio/mp4",
 function svgUse(id){ return `<svg class="svg"><use href="#${id}"/></svg>`; }
 function addHint(text){ const h=el("div","hint"); h.textContent=text; $("msgs").appendChild(h); $("msgs").scrollTop=1e9; return h; }
 
+// Arregla la duración de los webm de MediaRecorder (a veces es Infinity),
+// necesario para poder mover la barra (seek) con precisión.
+function fixWebmDuration(a, cb){
+  if(a.duration && a.duration!==Infinity && !isNaN(a.duration)){ cb(a.duration); return; }
+  const onTU=()=>{ if(a.duration===Infinity||isNaN(a.duration)) return;
+    a.removeEventListener("timeupdate",onTU); a.currentTime=0; cb(a.duration); };
+  a.addEventListener("timeupdate",onTU);
+  try{ a.currentTime=1e101; }catch(e){ cb(a.duration); }
+}
 function addVoiceBubble(who, id, dur, transcript, scroll=true){
   const b=el("div","bubble "+who+" voicebub");
   const pl=el("div","vplayer");
   const btn=el("button","vbtn"); btn.innerHTML=svgUse("ic-play");
-  const line=el("div","vline"); const time=el("span","vdur"); time.textContent=fmtDur(dur||0);
+  const line=el("div","vline"); const fill=el("div","vfill"); line.appendChild(fill);
+  const time=el("span","vdur"); time.textContent=fmtDur(dur||0);
   pl.appendChild(btn); pl.appendChild(line); pl.appendChild(time); b.appendChild(pl);
   const tx=el("div","vtext"); b.appendChild(tx); b._tx=tx;
   if(transcript){ tx.textContent=transcript; } else { tx.style.display="none"; }
-  let audio=null;
+  let audio=null, total=dur||0, fixing=false;
+  const setFill=()=>{ fill.style.width=(total? Math.min(1,(audio.currentTime/total))*100 : 0)+"%"; };
+  async function ensureAudio(){
+    if(audio) return audio;
+    const blob=await idbGet(id); if(!blob) return null;
+    audio=new Audio(URL.createObjectURL(blob));
+    fixing=true;
+    fixWebmDuration(audio,(d)=>{ if(d && d!==Infinity && !isNaN(d)) total=d; fixing=false; setFill(); });
+    audio.ontimeupdate=()=>{ if(fixing) return; setFill(); time.textContent=fmtDur(audio.currentTime); };
+    audio.onended=()=>{ btn.innerHTML=svgUse("ic-play"); audio.currentTime=0; setFill(); time.textContent=fmtDur(total); };
+    return audio;
+  }
   btn.onclick=async()=>{
     try{
-      if(!audio){ const blob=await idbGet(id); if(!blob) return;
-        audio=new Audio(URL.createObjectURL(blob)); audio.onended=()=>btn.innerHTML=svgUse("ic-play"); }
-      if(audio.paused){ audio.play(); btn.innerHTML=svgUse("ic-pause"); }
-      else { audio.pause(); btn.innerHTML=svgUse("ic-play"); }
+      const a=await ensureAudio(); if(!a) return;
+      if(a.paused){ a.play(); btn.innerHTML=svgUse("ic-pause"); }
+      else { a.pause(); btn.innerHTML=svgUse("ic-play"); }
     }catch(e){ console.error(e); }
   };
+  // Mover la barra: tocar o arrastrar para ir adelante/atrás.
+  let dragging=false;
+  const seekTo=cx=>{
+    if(!audio || !total) return;
+    const r=line.getBoundingClientRect();
+    let p=(cx-r.left)/r.width; p=Math.max(0,Math.min(1,p));
+    audio.currentTime=p*total; setFill(); time.textContent=fmtDur(audio.currentTime);
+  };
+  line.addEventListener("pointerdown",async e=>{ e.preventDefault(); await ensureAudio();
+    dragging=true; try{ line.setPointerCapture(e.pointerId); }catch(_){} seekTo(e.clientX); });
+  line.addEventListener("pointermove",e=>{ if(dragging) seekTo(e.clientX); });
+  const endDrag=e=>{ dragging=false; try{ line.releasePointerCapture(e.pointerId); }catch(_){} };
+  line.addEventListener("pointerup",endDrag);
+  line.addEventListener("pointercancel",endDrag);
   $("msgs").appendChild(b); if(scroll) $("msgs").scrollTop=1e9; return b;
 }
 
@@ -469,7 +503,10 @@ function setMicUI(state){  // state: "" | "prep" | "rec"
   m.innerHTML = state==="rec" ? svgUse("ic-stop") : svgUse("ic-mic");
 }
 function showRecTime(){ const s=Math.round((Date.now()-RECO.start)/1000);
-  $("input").placeholder="● "+t().recording+" "+fmtDur(s)+" — toca para enviar"; }
+  const base="● "+t().listening+" "+fmtDur(s);
+  // Si no hay dictado en vivo (Edge/iPhone), avisamos de que el texto sale al terminar.
+  $("input").placeholder = RECO.recog ? base+" — toca para enviar"
+                                      : base+" · "+t().recHint; }
 /* reconocimiento en vivo (best-effort): escribe lo que dices en el campo al instante.
    No es la transcripción final — esa la hace Groq (más precisa). Si el navegador no
    lo soporta, simplemente no se muestra y la nota funciona igual. */

@@ -269,7 +269,13 @@ input::placeholder,textarea::placeholder{color:var(--faint);}
   background:var(--gold-soft);color:var(--gold2);flex:0 0 auto;}
 .bubble.me .vbtn{background:rgba(255,255,255,.2);color:#fff;}
 .vbtn .svg{width:16px;height:16px;}
-.vline{flex:1;height:3px;border-radius:2px;background:currentColor;opacity:.28;min-width:54px;}
+.vline{position:relative;flex:1;height:16px;display:flex;align-items:center;min-width:54px;
+  cursor:pointer;touch-action:none;}
+.vline::before{content:"";position:absolute;left:0;right:0;height:4px;border-radius:2px;
+  background:currentColor;opacity:.26;}
+.vfill{position:absolute;left:0;height:4px;width:0;border-radius:2px;background:currentColor;}
+.vfill::after{content:"";position:absolute;right:-5px;top:50%;transform:translateY(-50%);
+  width:11px;height:11px;border-radius:50%;background:currentColor;box-shadow:0 1px 2px rgba(0,0,0,.25);}
 .vdur{font-size:.82rem;font-variant-numeric:tabular-nums;opacity:.85;flex:0 0 auto;}
 .vtext{margin-top:9px;font-size:.97rem;line-height:1.5;}
 .bubble.me .vtext{color:#f3eee2;}
