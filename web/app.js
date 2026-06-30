@@ -373,7 +373,13 @@ function autoGrow(){ inputEl.style.height="auto"; inputEl.style.height=Math.min(
 inputEl.addEventListener("input",autoGrow);
 inputEl.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
 $("send").onclick=sendMsg;
-$("voice-btn").onclick=()=>{ S.voice=!S.voice; save(); $("voice-btn").classList.toggle("on",S.voice); if(!S.voice)stopVoice(); };
+function setVoiceBtn(){
+  const b=$("voice-btn");
+  b.classList.toggle("on",S.voice);
+  b.innerHTML=`<svg class="svg"><use href="#${S.voice?"ic-voice":"ic-voice-off"}"/></svg>`;
+  b.title=S.voice?"Voz activada":"Voz silenciada";
+}
+$("voice-btn").onclick=()=>{ S.voice=!S.voice; save(); setVoiceBtn(); if(!S.voice)stopVoice(); };
 
 /* ===========================================================================
    NOTAS DE VOZ — grabar (MediaRecorder) + guardar (IndexedDB) + transcribir
@@ -1000,7 +1006,7 @@ $("ob-go").onclick=()=>{
 /* ===========================================================================
    ARRANQUE
    =========================================================================== */
-function launchApp(){ $("app").classList.remove("hidden"); go("home"); $("voice-btn").classList.toggle("on",S.voice); }
+function launchApp(){ $("app").classList.remove("hidden"); go("home"); setVoiceBtn(); }
 
 // ¿usuario ya conocido?  -> directo a la app
 if(S.name || S.convos.length || S.journal.length){
