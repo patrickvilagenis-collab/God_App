@@ -10,7 +10,7 @@
 //
 // Recibe { text, language } y devuelve audio/mpeg (mp3).
 
-const DEFAULT_VOICE = "pNInz6obpgDQGcFmaJgB"; // "Adam" — voz masculina grave, firme y con presencia
+const DEFAULT_VOICE = "orF2qy9215xjwqqxqsWW"; // "Rafael" — hombre mayor, castellano de España, maduro y con presencia
 const DEFAULT_MODEL = "eleven_multilingual_v2";
 
 export default async function handler(req, res) {
@@ -43,9 +43,9 @@ export default async function handler(req, res) {
           text,
           model_id: model,
           voice_settings: {
-            stability: 0.55,        // firme y serena, con autoridad tranquila
+            stability: 0.62,        // sereno y sosegado (evita el tono teatral)
             similarity_boost: 0.85,
-            style: 0.35,            // presencia y calidez, sin sonar plano
+            style: 0.18,            // calidez contenida, sin dramatizar
             use_speaker_boost: true,
           },
         }),
