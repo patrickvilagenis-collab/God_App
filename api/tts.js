@@ -10,7 +10,10 @@
 //
 // Recibe { text, language } y devuelve audio/mpeg (mp3).
 
-const DEFAULT_VOICE = "orF2qy9215xjwqqxqsWW"; // "Rafael" — hombre mayor, castellano de España, maduro y con presencia
+// Voz según idioma: hombre mayor y maduro en ambos.
+const VOICE_ES = "orF2qy9215xjwqqxqsWW"; // "Rafael" — castellano de España, maduro y con presencia
+const VOICE_EN = "NOpBlnGInO9m6vDvFkFC"; // "Spuds"  — inglés, mayor, sabio y cercano
+const DEFAULT_VOICE = VOICE_ES;
 const DEFAULT_MODEL = "eleven_multilingual_v2";
 
 export default async function handler(req, res) {
@@ -29,9 +32,11 @@ export default async function handler(req, res) {
     text = text.trim().slice(0, 1500); // límite de seguridad/coste; las respuestas son breves
     if (!text) { res.status(400).json({ error: "text empty" }); return; }
 
+    const lang = (req.body && req.body.language === "en") ? "en" : "es";
+    const byLang = lang === "en" ? VOICE_EN : VOICE_ES;
     const reqVoice = (req.body && typeof req.body.voice === "string") ? req.body.voice.trim() : "";
     const voice = /^[A-Za-z0-9]{15,40}$/.test(reqVoice) ? reqVoice
-      : (process.env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE);
+      : (process.env.ELEVENLABS_VOICE_ID || byLang);
     const model = process.env.ELEVENLABS_MODEL || DEFAULT_MODEL;
 
     const r = await fetch(
